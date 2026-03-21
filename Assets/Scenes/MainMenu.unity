@@ -333,6 +333,7 @@ GameObject:
   - component: {fileID: 747436493}
   - component: {fileID: 747436492}
   - component: {fileID: 747436491}
+  - component: {fileID: 747436494}
   m_Layer: 0
   m_Name: PlayButton
   m_TagString: Untagged
@@ -382,7 +383,7 @@ MonoBehaviour:
   m_Transition: 1
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
-    m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_HighlightedColor: {r: 1, g: 0, b: 0.88550186, a: 1}
     m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
     m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
     m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
@@ -454,6 +455,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 747436489}
   m_CullTransparentMesh: 1
+--- !u!114 &747436494
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 747436489}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fddff8a633eab5e4b87bd17dd8cf6485, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonHover
+  hoverScale: 1.2
 --- !u!1 &791762818
 GameObject:
   m_ObjectHideFlags: 0
@@ -545,6 +559,7 @@ GameObject:
   - component: {fileID: 939331104}
   - component: {fileID: 939331103}
   - component: {fileID: 939331102}
+  - component: {fileID: 939331105}
   m_Layer: 0
   m_Name: CreditsButton
   m_TagString: Untagged
@@ -654,6 +669,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 939331100}
   m_CullTransparentMesh: 1
+--- !u!114 &939331105
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 939331100}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fddff8a633eab5e4b87bd17dd8cf6485, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonHover
+  hoverScale: 1.2
 --- !u!1 &961043272
 GameObject:
   m_ObjectHideFlags: 0
@@ -1186,6 +1214,7 @@ GameObject:
   - component: {fileID: 1547143670}
   - component: {fileID: 1547143669}
   - component: {fileID: 1547143668}
+  - component: {fileID: 1547143671}
   m_Layer: 0
   m_Name: QuitButton
   m_TagString: Untagged
@@ -1307,6 +1336,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1547143666}
   m_CullTransparentMesh: 1
+--- !u!114 &1547143671
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1547143666}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fddff8a633eab5e4b87bd17dd8cf6485, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonHover
+  hoverScale: 1.2
 --- !u!1 &1636128737
 GameObject:
   m_ObjectHideFlags: 0
