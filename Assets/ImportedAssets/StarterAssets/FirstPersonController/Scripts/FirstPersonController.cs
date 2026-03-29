@@ -64,6 +64,8 @@ namespace StarterAssets
 		private float _jumpTimeoutDelta;
 		private float _fallTimeoutDelta;
 
+		private Animator _animator;
+
 	
 #if ENABLE_INPUT_SYSTEM
 		private PlayerInput _playerInput;
@@ -108,6 +110,8 @@ namespace StarterAssets
 			// reset our timeouts on start
 			_jumpTimeoutDelta = JumpTimeout;
 			_fallTimeoutDelta = FallTimeout;
+
+			_animator = GetComponent<Animator>();
 		}
 
 		private void Update()
@@ -115,6 +119,23 @@ namespace StarterAssets
 			JumpAndGravity();
 			GroundedCheck();
 			Move();
+
+			float speed = new Vector2(_input.move.x, _input.move.y).magnitude;
+			if (speed == 0)
+			{
+    			// Idle
+    			_animator.SetFloat("Speed", 0f);
+			}
+			else if (_input.sprint)
+			{
+    			// Running (shift held)
+    			_animator.SetFloat("Speed", 2f);
+			}
+			else
+			{
+    			// Walking
+    			_animator.SetFloat("Speed", 1f);
+			}
 		}
 
 		private void LateUpdate()
