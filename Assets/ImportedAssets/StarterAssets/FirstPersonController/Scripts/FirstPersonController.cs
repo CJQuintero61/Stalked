@@ -237,6 +237,8 @@ namespace StarterAssets
 				{
 					// the square root of H * -2 * G = how much velocity needed to reach desired height
 					_verticalVelocity = Mathf.Sqrt(JumpHeight * -2f * Gravity);
+
+					_animator.SetTrigger("Jump");
 				}
 
 				// jump timeout
@@ -258,6 +260,8 @@ namespace StarterAssets
 
 				// if we are not grounded, do not jump
 				_input.jump = false;
+
+				_animator.SetBool("Grounded", true);
 			}
 
 			// apply gravity over time if under terminal (multiply by delta time twice to linearly speed up over time)
