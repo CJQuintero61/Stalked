@@ -136,6 +136,12 @@ namespace StarterAssets
     			// Walking
     			_animator.SetFloat("Speed", 1f);
 			}
+
+			// apply left and right movement animations
+			_animator.SetFloat("Horizontal", _input.move.x);
+
+			// apply forward and backward movement animations
+			_animator.SetFloat("Vertical", _input.move.y);
 		}
 
 		private void LateUpdate()
