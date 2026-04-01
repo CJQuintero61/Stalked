@@ -112,6 +112,9 @@ namespace StarterAssets
 			_fallTimeoutDelta = FallTimeout;
 
 			_animator = GetComponent<Animator>();
+
+			Cursor.lockState = CursorLockMode.Locked;
+			Cursor.visible = false;
 		}
 
 		private void Update()
