@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.AI;
-using System.Collections;
 
 public class ScarecrowEnemy : MonoBehaviour
 {
@@ -21,14 +20,6 @@ public class ScarecrowEnemy : MonoBehaviour
     public float chaseUpdateRate = 0.2f;
     public float stoppingDistance = 2.2f;
 
-    [Header("Attack")]
-    public float attackRange = 2.3f;
-    public float attackCooldown = 2.0f;
-    public float attackDuration = 1.0f;
-    public float postAttackMoveDelay = 0.3f;
-    public float attackPathRangeBuffer = 0.25f;
-    public int damage = 25;
-
     [Header("Aggression")]
     public float aggression = 0f;
     public float aggressionIncreasePerSecond = 0.03f;
@@ -37,9 +28,6 @@ public class ScarecrowEnemy : MonoBehaviour
     public float bonusSpeedPerAggro = 0.35f;
 
     private bool isSeen;
-    private bool isAttacking;
-    private bool inPostAttackRecovery;
-    private float lastAttackTime;
     private float chaseTimer;
     private float seenTimer;
     private bool needsDestinationRefresh = true;
@@ -61,15 +49,10 @@ public class ScarecrowEnemy : MonoBehaviour
         UpdateAggression();
         UpdateSeenState();
 
-        if (isAttacking || inPostAttackRecovery)
-            return;
-
         if (isSeen)
             FreezeEnemy();
         else
             ChasePlayer();
-
-        TryAttack();
     }
 
     void UpdateAggression()
@@ -124,6 +107,11 @@ public class ScarecrowEnemy : MonoBehaviour
 
         agent.isStopped = true;
         needsDestinationRefresh = true;
+
+        if (animator != null)
+        {
+            animator.SetBool("IsMoving", false);
+        }
     }
 
     void ChasePlayer()
@@ -131,6 +119,11 @@ public class ScarecrowEnemy : MonoBehaviour
         if (!agent.isOnNavMesh) return;
 
         agent.isStopped = false;
+
+        if (animator != null)
+        {
+            animator.SetBool("IsMoving", true);
+        }
 
         chaseTimer -= Time.deltaTime;
         bool shouldRefreshDestination =
@@ -144,85 +137,5 @@ public class ScarecrowEnemy : MonoBehaviour
             needsDestinationRefresh = false;
             agent.SetDestination(player.position);
         }
-    }
-
-    void TryAttack()
-    {
-        if (isAttacking || inPostAttackRecovery) return;
-
-        if (IsPlayerInAttackRange() && Time.time >= lastAttackTime + attackCooldown)
-        {
-            StartCoroutine(AttackRoutine());
-        }
-    }
-
-    bool IsPlayerInAttackRange()
-    {
-        Vector3 enemyPosition = agent != null && agent.isOnNavMesh ? agent.nextPosition : transform.position;
-        Vector3 playerPosition = player.position;
-
-        enemyPosition.y = 0f;
-        playerPosition.y = 0f;
-
-        float directDistance = Vector3.Distance(enemyPosition, playerPosition);
-        if (directDistance > attackRange)
-            return false;
-
-        bool hasUsablePath =
-            agent != null &&
-            agent.isOnNavMesh &&
-            !agent.pathPending &&
-            agent.hasPath &&
-            agent.pathStatus == NavMeshPathStatus.PathComplete;
-
-        if (!hasUsablePath)
-            return true;
-
-        return agent.remainingDistance <= attackRange + attackPathRangeBuffer;
-    }
-
-    IEnumerator AttackRoutine()
-    {
-        isAttacking = true;
-        lastAttackTime = Time.time;
-
-        if (agent != null && agent.isOnNavMesh)
-        {
-            agent.isStopped = true;
-            agent.ResetPath();
-        }
-
-        if (animator != null)
-        {
-            animator.SetTrigger("Attack");
-        }
-
-        if (IsPlayerInAttackRange())
-        {
-            PlayerHealth health = player.GetComponent<PlayerHealth>();
-            if (health != null)
-            {
-                health.TakeDamage(damage);
-            }
-        }
-
-        yield return new WaitForSeconds(attackDuration);
-
-        isAttacking = false;
-        inPostAttackRecovery = true;
-
-        if (agent != null && agent.isOnNavMesh)
-        {
-            agent.isStopped = false;
-            needsDestinationRefresh = false;
-            chaseTimer = chaseUpdateRate;
-            agent.SetDestination(player.position);
-        }
-
-        yield return new WaitForSeconds(postAttackMoveDelay);
-
-        inPostAttackRecovery = false;
-        needsDestinationRefresh = true;
-        chaseTimer = 0f;
     }
 }
