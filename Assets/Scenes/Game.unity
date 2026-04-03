@@ -488,7 +488,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f018ac57871f74e47af4a618704100ee, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerInteraction
-  interactDistance: 5
+  interactDistance: 2
   interactLayer:
     serializedVersion: 2
     m_Bits: 4294967295
@@ -1091,8 +1091,8 @@ Transform:
   m_GameObject: {fileID: 271222552}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -65.5, y: 0.018, z: -81.2}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: -53.1, y: 0.018, z: -75.058}
+  m_LocalScale: {x: 0.8, y: 0.86, z: 0.8}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 96029987}
@@ -1891,13 +1891,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 544959843}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: 0.5387804, z: -0, w: -0.84244627}
-  m_LocalPosition: {x: -16.682, y: 0, z: 0.289}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0.4505121, y: 0, z: 0.46739933}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 377014773856880530}
-  m_Father: {fileID: 1098221004}
+  m_Father: {fileID: 739182635842383457}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &544959845
 MonoBehaviour:
@@ -3607,13 +3607,12 @@ Transform:
   - {fileID: 3504878332092702480}
   - {fileID: 8329753767535835317}
   - {fileID: 5654730875164121978}
-  - {fileID: 544959844}
   - {fileID: 739182635842383457}
   - {fileID: 5980092084897659780}
   - {fileID: 5980092085738753464}
   - {fileID: 5980092085123248717}
   - {fileID: 5980092085808923486}
-  - {fileID: 7607154712900449503}
+  - {fileID: 1334535804}
   - {fileID: 9082856280718746350}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -4412,6 +4411,54 @@ Transform:
   m_Children: []
   m_Father: {fileID: 579971757}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1334535803
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1334535804}
+  - component: {fileID: 1334535805}
+  m_Layer: 0
+  m_Name: GatePivot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1334535804
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1334535803}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0.9524536, z: -0, w: 0.30468377}
+  m_LocalPosition: {x: -2.0356598, y: -0.00001, z: -4.2930145}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 7607154712900449503}
+  m_Father: {fileID: 1098221004}
+  m_LocalEulerAnglesHint: {x: 0, y: -144.522, z: 0}
+--- !u!114 &1334535805
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1334535803}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 419a8b8538e837f4292a5736a5745aea, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DoorInteractable
+  isOpen: 0
+  openRotation: -90
+  smooth: 2
 --- !u!1 &1336593794
 GameObject:
   m_ObjectHideFlags: 0
@@ -7376,7 +7423,8 @@ Transform:
   m_LocalPosition: {x: -16.44666, y: 0, z: -0.31600952}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 544959844}
   m_Father: {fileID: 1098221004}
   m_LocalEulerAnglesHint: {x: 0, y: 294.799, z: 0}
 --- !u!23 &771685713562960533
@@ -11675,6 +11723,8 @@ GameObject:
   - component: {fileID: 7607154712900449503}
   - component: {fileID: 6790814149754600314}
   - component: {fileID: 8780090955492577200}
+  - component: {fileID: 8780090955492577202}
+  - component: {fileID: 8780090955492577201}
   m_Layer: 0
   m_Name: Gate
   m_TagString: Untagged
@@ -11999,12 +12049,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7122964274333281893}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: 0.27833682, z: -0, w: 0.96048355}
-  m_LocalPosition: {x: -2.7016602, y: 0.6749934, z: -3.855011}
+  m_LocalRotation: {x: -0, y: 0.99962074, z: -0, w: 0.027540833}
+  m_LocalPosition: {x: 0.7965627, y: 0.6750034, z: 0.029860795}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1098221004}
+  m_Father: {fileID: 1334535804}
   m_LocalEulerAnglesHint: {x: 0, y: 32.322, z: 0}
 --- !u!4 &7614211920139216641
 Transform:
@@ -13010,6 +13060,48 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!65 &8780090955492577201
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7122964274333281893}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1.6671085, y: 1.35, z: 1.56}
+  m_Center: {x: 0.000003784895, y: 0, z: 0.00000002514573}
+--- !u!65 &8780090955492577202
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7122964274333281893}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1.6671085, y: 1.35, z: 0.045791328}
+  m_Center: {x: 0.000003784895, y: 0, z: 0.00000002514573}
 --- !u!23 &8782073952138599534
 MeshRenderer:
   m_ObjectHideFlags: 0
