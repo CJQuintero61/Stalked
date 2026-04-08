@@ -357,6 +357,7 @@ MonoBehaviour:
     m_Bits: 4294967295
   interactPanel: {fileID: 784870361}
   promptText: {fileID: 784870363}
+  hasCollar: 0
 --- !u!114 &96029989
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2744,6 +2745,9 @@ GameObject:
   - component: {fileID: 728229194}
   - component: {fileID: 728229201}
   - component: {fileID: 728229200}
+  - component: {fileID: 728229202}
+  - component: {fileID: 728229204}
+  - component: {fileID: 728229203}
   m_Layer: 8
   m_Name: PlayerBody
   m_TagString: Player
@@ -3092,9 +3096,56 @@ MonoBehaviour:
   - {fileID: 8300000, guid: e702c6b7953d72f42a62778c969b44ce, type: 3}
   walkStepDistance: 2.5
   walkPitch: 1.15
-  sprintStepDistance: 2
+  sprintStepDistance: 2.75
   sprintPitch: 1
   sprintVolume: 1
+--- !u!114 &728229202
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 728229192}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6380eec4100de504cbdb18063deff99c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InventoryManager
+  inventory: []
+  inventoryUIParent: {fileID: 0}
+  inventoryIconPrefab: {fileID: 2918131202575212086, guid: f77d31c9262450442aa417e3f45e9172, type: 3}
+--- !u!114 &728229203
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 728229192}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 863d98390afbe0243acd0695282de700, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::StaminaUI
+  staminaManager: {fileID: 728229204}
+  fillImage: {fileID: 1208218128}
+  fullColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+  emptyColor: {r: 1, g: 0, b: 0, a: 1}
+--- !u!114 &728229204
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 728229192}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0b8c0e35700214340ba8d20cfdf7a86e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::StaminaManager
+  maxStamina: 50
+  staminaDrainRate: 20
+  staminaRegenRate: 5
+  regenDelay: 1.5
 --- !u!1 &737412470
 GameObject:
   m_ObjectHideFlags: 0
@@ -3343,7 +3394,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_margin: {x: 0, y: 0, z: -194.53027, w: 0}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -4864,7 +4915,6 @@ RectTransform:
   m_LocalScale: {x: 0, y: 0, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1532861866}
   - {fileID: 1208218127}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -17066,3 +17116,4 @@ SceneRoots:
   - {fileID: 1645848102}
   - {fileID: 1762161028}
   - {fileID: 461475962}
+  - {fileID: 1132183805}
