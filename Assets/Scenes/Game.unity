@@ -454,6 +454,7 @@ GameObject:
   - component: {fileID: 96029990}
   - component: {fileID: 96029989}
   - component: {fileID: 96029988}
+  - component: {fileID: 190200002}
   m_Layer: 0
   m_Name: MainCamera
   m_TagString: MainCamera
@@ -493,6 +494,31 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   interactUI: {fileID: 8814555}
+--- !u!114 &190200002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 96029986}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5e6b7b0fdab44a2ea7e20ec25fd4d690, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerDollFearEffects
+  playerRoot: {fileID: 728229193}
+  cameraTarget: {fileID: 1463690195}
+  firstPersonController: {fileID: 728229198}
+  pressureSource: {fileID: 0}
+  pressureSmoothing: 5
+  maxFovOffset: 5
+  swayPitch: 1.4
+  swayRoll: 2
+  yawPullSpeed: 18
+  lookDampening: 0.35
+  grabFovOffset: 10
+  grabPitchOffset: 8
+  grabYawPullSpeed: 110
 --- !u!114 &96029989
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2425,6 +2451,7 @@ GameObject:
   - component: {fileID: 728229196}
   - component: {fileID: 728229195}
   - component: {fileID: 728229194}
+  - component: {fileID: 190200001}
   m_Layer: 8
   m_Name: PlayerBody
   m_TagString: Player
@@ -2659,6 +2686,20 @@ CharacterController:
   m_SkinWidth: 0.02
   m_MinMoveDistance: 0
   m_Center: {x: 0, y: 0.93, z: 0}
+--- !u!114 &190200001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 728229192}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dcdbc5181fc371c4094511bcd1e8dcec, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerHealth
+  maxHealth: 100
+  currentHealth: 0
 --- !u!1 &737412470
 GameObject:
   m_ObjectHideFlags: 0

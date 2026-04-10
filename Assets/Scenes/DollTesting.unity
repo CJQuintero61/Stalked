@@ -1204,6 +1204,7 @@ GameObject:
   - component: {fileID: 509338466}
   - component: {fileID: 509338465}
   - component: {fileID: 509338464}
+  - component: {fileID: 190100001}
   m_Layer: 8
   m_Name: PlayerBody
   m_TagString: Player
@@ -1438,6 +1439,20 @@ CharacterController:
   m_SkinWidth: 0.02
   m_MinMoveDistance: 0
   m_Center: {x: 0, y: 0.93, z: 0}
+--- !u!114 &190100001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 509338462}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dcdbc5181fc371c4094511bcd1e8dcec, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerHealth
+  maxHealth: 100
+  currentHealth: 0
 --- !u!1 &515730763
 GameObject:
   m_ObjectHideFlags: 0
@@ -1742,6 +1757,7 @@ GameObject:
   - component: {fileID: 601548869}
   - component: {fileID: 601548868}
   - component: {fileID: 601548867}
+  - component: {fileID: 190100002}
   m_Layer: 0
   m_Name: MainCamera
   m_TagString: MainCamera
@@ -1781,6 +1797,31 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   interactUI: {fileID: 0}
+--- !u!114 &190100002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 601548865}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5e6b7b0fdab44a2ea7e20ec25fd4d690, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerDollFearEffects
+  playerRoot: {fileID: 509338463}
+  cameraTarget: {fileID: 1356651217}
+  firstPersonController: {fileID: 509338468}
+  pressureSource: {fileID: 0}
+  pressureSmoothing: 5
+  maxFovOffset: 5
+  swayPitch: 1.4
+  swayRoll: 2
+  yawPullSpeed: 18
+  lookDampening: 0.35
+  grabFovOffset: 10
+  grabPitchOffset: 8
+  grabYawPullSpeed: 110
 --- !u!114 &601548868
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3183,10 +3224,33 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4c802d71f815412cb7a6286ac2b76d5d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DollNightcrawlerFollower
-  playerTarget: {fileID: 0}
+  playerTarget: {fileID: 509338463}
+  playerCamera: {fileID: 601548871}
+  playerHealth: {fileID: 190100001}
+  fearEffects: {fileID: 190100002}
+  eyePoint: {fileID: 0}
+  audioSource: {fileID: 0}
   playerTag: Player
-  destinationRefreshRate: 0.2
-  stoppingDistance: 1.6
+  stoppingDistance: 1.5
+  relocationRefreshRate: 0.75
+  relocateMinRadius: 3.5
+  relocateMaxRadius: 8.5
+  retreatMinRadius: 6.5
+  retreatMaxRadius: 11
+  destinationSampleRadius: 2.5
+  relocationSamples: 18
+  directViewDot: 0.85
+  blindSpotDot: 0.2
+  maxSightDistance: 30
+  pressureDistance: 2.8
+  pressureAnchorDistance: 1.8
+  peekDuration: 0.9
+  pressureBuildDuration: 1.4
+  grabDuration: 1.1
+  cooldownDuration: 2.5
+  pressureDestinationRefreshRate: 0.2
+  grabDamage: 25
+  grabSnapDistance: 1.2
   movingSpeedThreshold: 0.05
   crawlAnimationSpeed: 1
 --- !u!195 &1333738350
