@@ -13,6 +13,7 @@ public class PlayerInteraction : MonoBehaviour
 
     [Header("Booleans")]
     public bool hasCollar = false;
+    public bool hasFlashlight = false;
 
     void Update()
     {
@@ -63,12 +64,26 @@ public class PlayerInteraction : MonoBehaviour
     }
 
     // This is where your booleans live
-    void HandlePickUp(string itemName)
+void HandlePickUp(string itemName)
+{
+    if (itemName == "Collar")
     {
-        if (itemName == "Collar") hasCollar = true;
-        
-        Debug.Log("Picked up " + itemName + ". Boolean set to true.");
+        hasCollar = true;
     }
+    else if (itemName == "Flashlight")
+    {
+        hasFlashlight = true;
+
+        // NEW: Tell the FlashlightController script that we found it!
+        FlashlightController fc = GetComponent<FlashlightController>();
+    if (fc != null)
+    {
+        // This flips the bool AND shows the UI text at the same time
+        fc.EnableFlashlight(); 
+    }
+    }
+}
+    
 
     void UpdateUI(bool state, string message)
     {
