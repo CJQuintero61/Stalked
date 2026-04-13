@@ -20,6 +20,15 @@ public class ScarecrowEnemy : MonoBehaviour
     [Header("Movement")]
     public float chaseUpdateRate = 0.2f;
     public float stoppingDistance = 2.2f;
+    public float navMeshRecoveryDistance = 4f;
+
+    [Header("Attack")]
+    public int attackDamage = 20;
+    public float attackRange = 2.6f;
+    public float attackCooldown = 1.15f;
+    public float attackFacingSpeed = 10f;
+    public bool attackRequiresLineOfSight = true;
+    public string attackTriggerName = "";
 
     [Header("Anti-Stare")]
     public float maxFrozenByStareTime = 3.5f;
@@ -49,6 +58,7 @@ public class ScarecrowEnemy : MonoBehaviour
     public float minSwitchDelay = 8f;
     public float maxSwitchDelay = 18f;
     public float minSwitchDistanceFromPlayer = 10f;
+    public float maxPreferredSwitchDistanceFromPlayer = 90f;
     public float switchSpawnPause = 0.75f;
     public bool onlySwitchWhenNotSeen = true;
     public bool avoidSwitchingIntoView = true;
@@ -61,12 +71,17 @@ public class ScarecrowEnemy : MonoBehaviour
     private float frozenByStareTimer;
     private float stareBreakTimer;
     private float stareBreakCooldownTimer;
+    private float attackCooldownTimer;
     private float switchTimer;
     private float switchPauseTimer;
     private float behaviorDecisionTimer;
     private bool needsDestinationRefresh = true;
+    private bool canUseAttackTrigger;
+    private bool warnedMissingPlayerHealth;
     private GameObject currentDecoySpot;
-    private readonly List<GameObject> decoyScarecrows = new List<GameObject>();
+    private PlayerHealth playerHealth;
+    private NavMeshPath chasePath;
+    private List<GameObject> decoyScarecrows;
     private AggressionBehavior currentBehavior = AggressionBehavior.Idle;
 
     public bool IsSeenByPlayer => isSeen;
@@ -81,6 +96,7 @@ public class ScarecrowEnemy : MonoBehaviour
 
     void Start()
     {
+        EnsureRuntimeState();
         CacheReferences();
 
         if (agent != null)
@@ -92,6 +108,11 @@ public class ScarecrowEnemy : MonoBehaviour
     void Update()
     {
         if (player == null || playerCamera == null || agent == null) return;
+
+        EnsureRuntimeState();
+
+        if (attackCooldownTimer > 0f)
+            attackCooldownTimer -= Time.deltaTime;
 
         UpdateAggression();
         UpdateSeenState();
@@ -113,6 +134,7 @@ public class ScarecrowEnemy : MonoBehaviour
 
     public void ConfigureSwitchingTargets(List<GameObject> decoys, Transform playerTransform, Camera camera)
     {
+        EnsureRuntimeState();
         decoyScarecrows.Clear();
 
         if (decoys != null)
@@ -136,6 +158,8 @@ public class ScarecrowEnemy : MonoBehaviour
 
     public void MoveIntoDecoy(GameObject decoy)
     {
+        EnsureRuntimeState();
+
         if (decoy == null)
             return;
 
@@ -163,6 +187,7 @@ public class ScarecrowEnemy : MonoBehaviour
         frozenByStareTimer = 0f;
         stareBreakTimer = 0f;
         chaseTimer = 0f;
+        attackCooldownTimer = 0f;
         behaviorDecisionTimer = 0f;
         currentBehavior = AggressionBehavior.Idle;
         switchPauseTimer = switchSpawnPause;
@@ -234,6 +259,8 @@ public class ScarecrowEnemy : MonoBehaviour
 
     void UpdateSwitching()
     {
+        EnsureRuntimeState();
+
         if (!enableScarecrowSwitching || decoyScarecrows.Count <= 1)
             return;
 
@@ -259,27 +286,42 @@ public class ScarecrowEnemy : MonoBehaviour
 
     GameObject PickNextDecoySpot()
     {
+        EnsureRuntimeState();
         decoyScarecrows.RemoveAll(decoy => decoy == null);
 
-        List<GameObject> candidates = new List<GameObject>();
+        List<GameObject> preferredCandidates = new List<GameObject>();
+        List<(GameObject decoy, float distance)> fallbackCandidates = new List<(GameObject decoy, float distance)>();
+
         foreach (GameObject decoy in decoyScarecrows)
         {
             if (decoy == currentDecoySpot)
                 continue;
 
-            if (player != null && Vector3.Distance(player.position, decoy.transform.position) < minSwitchDistanceFromPlayer)
+            float distanceFromPlayer = player != null
+                ? Vector3.Distance(player.position, decoy.transform.position)
+                : 0f;
+
+            if (player != null && distanceFromPlayer < minSwitchDistanceFromPlayer)
                 continue;
 
             if (avoidSwitchingIntoView && WouldPlayerSeePosition(decoy.transform.position))
                 continue;
 
-            candidates.Add(decoy);
+            if (player == null || distanceFromPlayer <= maxPreferredSwitchDistanceFromPlayer)
+                preferredCandidates.Add(decoy);
+            else
+                fallbackCandidates.Add((decoy, distanceFromPlayer));
         }
 
-        if (candidates.Count == 0)
+        if (preferredCandidates.Count > 0)
+            return preferredCandidates[Random.Range(0, preferredCandidates.Count)];
+
+        if (fallbackCandidates.Count == 0)
             return null;
 
-        return candidates[Random.Range(0, candidates.Count)];
+        fallbackCandidates.Sort((a, b) => a.distance.CompareTo(b.distance));
+        int nearestFallbackCount = Mathf.Min(3, fallbackCandidates.Count);
+        return fallbackCandidates[Random.Range(0, nearestFallbackCount)].decoy;
     }
 
     bool WouldPlayerSeePosition(Vector3 position)
@@ -325,9 +367,25 @@ public class ScarecrowEnemy : MonoBehaviour
 
     void CacheReferences()
     {
+        EnsureRuntimeState();
+
         if (agent == null) agent = GetComponent<NavMeshAgent>();
         if (animator == null) animator = GetComponentInChildren<Animator>();
         if (audioSource == null) audioSource = GetComponent<AudioSource>();
+
+        if (player != null)
+        {
+            if (playerHealth == null)
+                playerHealth = player.GetComponent<PlayerHealth>();
+
+            if (playerHealth == null)
+                playerHealth = player.GetComponentInParent<PlayerHealth>();
+
+            if (playerHealth == null)
+                playerHealth = player.GetComponentInChildren<PlayerHealth>();
+        }
+
+        canUseAttackTrigger = HasAnimatorTrigger(attackTriggerName);
     }
 
     void ScheduleNextSwitch()
@@ -458,14 +516,19 @@ public class ScarecrowEnemy : MonoBehaviour
 
     void ChasePlayer()
     {
-        if (!agent.isOnNavMesh) return;
+        if (agent == null || !agent.enabled)
+            return;
 
-        agent.isStopped = false;
-
-        if (animator != null)
+        if (!EnsureAgentOnNavMesh())
         {
-            animator.SetBool("IsMoving", true);
+            if (animator != null)
+                animator.SetBool("IsMoving", false);
+
+            return;
         }
+
+        if (TryAttackPlayer())
+            return;
 
         chaseTimer -= Time.deltaTime;
         bool shouldRefreshDestination =
@@ -476,9 +539,176 @@ public class ScarecrowEnemy : MonoBehaviour
         if (shouldRefreshDestination)
         {
             chaseTimer = chaseUpdateRate;
-            needsDestinationRefresh = false;
-            agent.SetDestination(player.position);
+            if (!TrySetChaseDestination())
+            {
+                Idle();
+                return;
+            }
         }
+
+        agent.isStopped = false;
+
+        if (animator != null)
+            animator.SetBool("IsMoving", agent.desiredVelocity.sqrMagnitude > 0.01f);
+    }
+
+    bool TryAttackPlayer()
+    {
+        if (!IsPlayerInAttackRange())
+            return false;
+
+        agent.isStopped = true;
+        needsDestinationRefresh = true;
+        FacePlayer();
+
+        if (animator != null)
+            animator.SetBool("IsMoving", false);
+
+        if (attackCooldownTimer > 0f)
+            return true;
+
+        if (playerHealth == null)
+            CacheReferences();
+
+        if (playerHealth != null && playerHealth.currentHealth > 0)
+        {
+            if (canUseAttackTrigger)
+                animator.SetTrigger(attackTriggerName);
+
+            playerHealth.TakeDamage(attackDamage);
+            attackCooldownTimer = attackCooldown;
+        }
+        else if (!warnedMissingPlayerHealth)
+        {
+            warnedMissingPlayerHealth = true;
+            Debug.LogWarning("ScarecrowEnemy could not find PlayerHealth on the player, so attacks will not deal damage.", this);
+        }
+
+        return true;
+    }
+
+    bool IsPlayerInAttackRange()
+    {
+        if (player == null)
+            return false;
+
+        Vector3 attackOrigin = eyePoint != null ? eyePoint.position : transform.position + Vector3.up * 1.4f;
+        Vector3 playerTarget = player.position + Vector3.up * 1f;
+        Vector3 directionToPlayer = playerTarget - attackOrigin;
+        float distanceToPlayer = directionToPlayer.magnitude;
+
+        if (distanceToPlayer > attackRange)
+            return false;
+
+        if (!attackRequiresLineOfSight || distanceToPlayer <= 0.001f)
+            return true;
+
+        if (Physics.Raycast(attackOrigin, directionToPlayer.normalized, out RaycastHit hit, attackRange + 0.5f))
+            return hit.transform.root == player.root;
+
+        return false;
+    }
+
+    bool TrySetChaseDestination()
+    {
+        if (player == null || agent == null || !agent.enabled)
+            return false;
+
+        EnsureRuntimeState();
+
+        if (!EnsureAgentOnNavMesh())
+            return false;
+
+        bool foundPath = agent.CalculatePath(player.position, chasePath);
+        if (!foundPath || chasePath.status == NavMeshPathStatus.PathInvalid || chasePath.corners.Length == 0)
+        {
+            TryRecoverChasePosition();
+            return false;
+        }
+
+        needsDestinationRefresh = false;
+        agent.isStopped = false;
+        return agent.SetPath(chasePath);
+    }
+
+    void EnsureRuntimeState()
+    {
+        if (decoyScarecrows == null)
+            decoyScarecrows = new List<GameObject>();
+
+        if (chasePath == null)
+            chasePath = new NavMeshPath();
+    }
+
+    bool EnsureAgentOnNavMesh()
+    {
+        if (agent != null && agent.enabled && agent.isOnNavMesh)
+            return true;
+
+        return TryRecoverChasePosition();
+    }
+
+    bool TryRecoverChasePosition()
+    {
+        if (agent == null || !agent.enabled)
+            return false;
+
+        if (NavMesh.SamplePosition(transform.position, out NavMeshHit hit, navMeshRecoveryDistance, NavMesh.AllAreas))
+        {
+            WarpTo(hit.position, transform.rotation);
+            if (agent.isOnNavMesh)
+            {
+                needsDestinationRefresh = true;
+                return true;
+            }
+        }
+
+        if (enableScarecrowSwitching)
+        {
+            GameObject nextDecoy = PickNextDecoySpot();
+            if (nextDecoy != null)
+            {
+                MoveIntoDecoy(nextDecoy);
+                return agent.isOnNavMesh;
+            }
+        }
+
+        return false;
+    }
+
+    void FacePlayer()
+    {
+        if (player == null)
+            return;
+
+        Vector3 flatDirection = player.position - transform.position;
+        flatDirection.y = 0f;
+
+        if (flatDirection.sqrMagnitude <= 0.001f)
+            return;
+
+        Quaternion targetRotation = Quaternion.LookRotation(flatDirection.normalized);
+        transform.rotation = Quaternion.Slerp(
+            transform.rotation,
+            targetRotation,
+            attackFacingSpeed * Time.deltaTime);
+    }
+
+    bool HasAnimatorTrigger(string triggerName)
+    {
+        if (animator == null || string.IsNullOrWhiteSpace(triggerName))
+            return false;
+
+        foreach (AnimatorControllerParameter parameter in animator.parameters)
+        {
+            if (parameter.type == AnimatorControllerParameterType.Trigger &&
+                parameter.name == triggerName)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     void UpdateAntiStareState()

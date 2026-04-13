@@ -2003,19 +2003,36 @@ MonoBehaviour:
   seenFreezeBuffer: 0.1
   chaseUpdateRate: 0.2
   stoppingDistance: 2.2
+  navMeshRecoveryDistance: 4
+  attackDamage: 20
+  attackRange: 2.6
+  attackCooldown: 1.15
+  attackFacingSpeed: 10
+  attackRequiresLineOfSight: 1
+  attackTriggerName: Attack
   maxFrozenByStareTime: 3.5
   stareBreakChaseDuration: 4
   stareBreakCooldown: 6
-  aggression: 0
+  aggression: 0.6
   aggressionIncreasePerSecond: 0.03
   maxAggression: 5
   baseSpeed: 3.5
   bonusSpeedPerAggro: 0.35
+  speedIncreaseAggressionThreshold: 3.5
+  ignoreStareAggressionThreshold: 4.5
+  behaviorDecisionInterval: 3
+  lowAggressionChaseChance: 0.15
+  highAggressionChaseChance: 0.95
+  lowAggressionIdleChance: 0.65
+  highAggressionIdleChance: 0.15
+  wanderRadius: 12
+  wanderDestinationTolerance: 1.25
   enableScarecrowSwitching: 1
   minSwitchDelay: 8
   maxSwitchDelay: 18
   minSwitchDistanceFromPlayer: 10
-  switchSpawnPause: 0.75
+  maxPreferredSwitchDistanceFromPlayer: 90
+  switchSpawnPause: 0.45
   onlySwitchWhenNotSeen: 0
   avoidSwitchingIntoView: 1
   switchViewDotThreshold: 0.55
