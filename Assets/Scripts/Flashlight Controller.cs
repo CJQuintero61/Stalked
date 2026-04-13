@@ -1,6 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
-using TMPro; // Don't forget this!
+using TMPro;
 
 public class FlashlightController : MonoBehaviour
 {
@@ -18,20 +18,20 @@ public class FlashlightController : MonoBehaviour
 
     void Start()
     {
-        // Make sure it's hidden when the game starts
         if(promptText != null) promptText.gameObject.SetActive(false);
+        
+        // Ensure the AudioSource is assigned
+        if (audioSource == null) audioSource = GetComponent<AudioSource>();
     }
 
     void Update()
     {
-        // Only allow the toggle if we have the flashlight
         if (hasFlashlight && Keyboard.current.fKey.wasPressedThisFrame)
         {
             ToggleFlashlight();
         }
     }
 
-    // Call this from your Pickup Script!
     public void EnableFlashlight()
     {
         hasFlashlight = true;
@@ -40,15 +40,34 @@ public class FlashlightController : MonoBehaviour
 
     void ToggleFlashlight()
     {
-        // Hide the prompt as soon as they use the flashlight once
         if(promptText != null) promptText.gameObject.SetActive(false);
+        
         isOn = !isOn;
         if (flashlightLight != null) flashlightLight.SetActive(isOn);
 
+        PlayToggleSound();
+    }
+
+    private void PlayToggleSound()
+    {
         if (audioSource != null)
         {
+            // 1. Kill any sound currently playing (the "Anti-Spam" fix)
+            audioSource.Stop();
+
+            // 2. Choose the correct clip
             AudioClip clipToPlay = isOn ? soundOn : soundOff;
-            if (clipToPlay != null) audioSource.PlayOneShot(clipToPlay);
+
+            if (clipToPlay != null)
+            {
+                // 3. Set the clip and play it fresh
+                audioSource.clip = clipToPlay;
+                
+                // Optional: Add a tiny pitch variation to make spamming less repetitive
+                audioSource.pitch = Random.Range(0.95f, 1.05f);
+                
+                audioSource.Play();
+            }
         }
     }
 }
