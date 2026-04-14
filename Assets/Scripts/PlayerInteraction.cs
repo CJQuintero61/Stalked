@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 using TMPro;
+using System.Collections;
 
 public class PlayerInteraction : MonoBehaviour
 {
@@ -8,27 +9,28 @@ public class PlayerInteraction : MonoBehaviour
     public LayerMask interactLayer;
     
     [Header("UI Settings")]
-    public GameObject interactPanel; // The "Press E" UI container
-    public TextMeshProUGUI promptText; // The text component inside the container
+    public GameObject interactPanel; 
+    public TextMeshProUGUI promptText; 
 
     [Header("Booleans")]
     public bool hasCollar = false;
     public bool hasFlashlight = false;
+    public bool hasCellarKey = false;
+    public bool hasCliffard = false;
+
+    private bool isShowingMessage = false;
 
     void Update()
     {
-        // Shoot ray from center of screen (First Person)
+        if (isShowingMessage == true) return; 
+
         Ray ray = Camera.main.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
         RaycastHit hit;
 
         if (Physics.Raycast(ray, out hit, interactDistance, interactLayer))
         {
-            // 1. Check for standard interactables
             DoorInteractable door = hit.collider.GetComponentInParent<DoorInteractable>();
             CellarInteractable cellar = hit.collider.GetComponentInParent<CellarInteractable>();
-            
-            // 2. Check for the items you want to "Pick Up"
-            // We use a simple tag or script name to identify the item
             ItemObject item = hit.collider.GetComponentInParent<ItemObject>();
 
             if (door != null)
@@ -38,8 +40,23 @@ public class PlayerInteraction : MonoBehaviour
             }
             else if (cellar != null)
             {
-                UpdateUI(true, "Press [E] to enter cellar");
-                if (Keyboard.current.eKey.wasPressedThisFrame) cellar.OpenCellar();
+                if (cellar.isLocked == true)
+                {
+                    UpdateUI(true, "Press [E] to open cellar");
+                }
+                else
+                {
+                    UpdateUI(true, "Press [E] to enter cellar");
+                }
+                
+                if (Keyboard.current.eKey.wasPressedThisFrame) 
+                {
+                    bool success = cellar.TryOpenCellar(hasCellarKey);
+                    if (success == false)
+                    {
+                        StartCoroutine(ShowTemporaryMessage("It's locked. Find a key.", 2f));
+                    }
+                }
             }
             else if (item != null)
             {
@@ -48,7 +65,29 @@ public class PlayerInteraction : MonoBehaviour
                 if (Keyboard.current.eKey.wasPressedThisFrame)
                 {
                     HandlePickUp(item.itemName);
-                    Destroy(item.gameObject); // Deletes the item from the scene
+
+                    // NEW LOGIC: Play the item's Audio Source
+                    if (item.itemAudioSource != null)
+                    {
+                        item.itemAudioSource.Play();
+
+                        // 1. Turn off all 3D meshes so it looks like it disappeared
+                        Renderer[] renderers = item.GetComponentsInChildren<Renderer>();
+                        foreach (Renderer r in renderers) r.enabled = false;
+
+                        // 2. Turn off all colliders so we can't click it again
+                        Collider[] colliders = item.GetComponentsInChildren<Collider>();
+                        foreach (Collider c in colliders) c.enabled = false;
+
+                        // 3. Destroy the object ONLY after the audio clip finishes playing
+                        Destroy(item.gameObject, item.itemAudioSource.clip.length);
+                    }
+                    else
+                    {
+                        // If there is no audio source, just destroy it instantly like normal
+                        Destroy(item.gameObject);
+                    }
+
                     UpdateUI(false, "");
                 }
             }
@@ -63,28 +102,41 @@ public class PlayerInteraction : MonoBehaviour
         }
     }
 
-    // This is where your booleans live
-void HandlePickUp(string itemName)
-{
-    if (itemName == "Collar")
+    IEnumerator ShowTemporaryMessage(string message, float duration)
     {
-        hasCollar = true;
+        isShowingMessage = true; 
+        UpdateUI(true, message); 
+        yield return new WaitForSeconds(duration); 
+        isShowingMessage = false; 
     }
-    else if (itemName == "Flashlight")
-    {
-        hasFlashlight = true;
 
-        // NEW: Tell the FlashlightController script that we found it!
-        FlashlightController fc = GetComponent<FlashlightController>();
-    if (fc != null)
+    void HandlePickUp(string itemName)
     {
-        // This flips the bool AND shows the UI text at the same time
-        fc.EnableFlashlight(); 
+        if (itemName == "Collar")
+        {
+            hasCollar = true;
+        }
+        else if(itemName == "Cellar Key")
+        {
+            hasCellarKey = true;
+            ObjectiveManager.Instance.UpdateObjective("Find the Cellar");
+        }
+        else if(itemName == "Cliffard")
+        {
+            hasCliffard = true;
+        }
+        else if (itemName == "Flashlight")
+        {
+            hasFlashlight = true;
+
+            FlashlightController fc = GetComponent<FlashlightController>();
+            if (fc != null)
+            {
+                fc.EnableFlashlight(); 
+            }
+        }
     }
-    }
-}
     
-
     void UpdateUI(bool state, string message)
     {
         if (interactPanel != null) interactPanel.SetActive(state);

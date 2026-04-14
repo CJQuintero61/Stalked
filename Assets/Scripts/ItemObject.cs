@@ -2,5 +2,8 @@ using UnityEngine;
 
 public class ItemObject : MonoBehaviour
 {
-    public string itemName; // Type "RedDrum" or "Flashlight" here in the Inspector
+    public string itemName;
+    
+    // NEW: We now look for the Audio Source attached to this specific item
+    public AudioSource itemAudioSource; 
 }
