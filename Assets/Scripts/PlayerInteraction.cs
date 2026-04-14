@@ -55,40 +55,55 @@ public class PlayerInteraction : MonoBehaviour
                     if (success == false)
                     {
                         StartCoroutine(ShowTemporaryMessage("It's locked. Find a key.", 2f));
+                        ObjectiveManager.Instance.UpdateObjective("Find Key to Cellar");
                     }
                 }
             }
             else if (item != null)
             {
-                UpdateUI(true, "Press [E] to pick up " + item.itemName);
-                
-                if (Keyboard.current.eKey.wasPressedThisFrame)
+                // NEW: Check if it is the Cellar Key and we DO NOT have the objective yet
+                bool isEarlyCellarKey = item.itemName == "Cellar Key" && 
+                                       (ObjectiveManager.Instance == null || 
+                                        ObjectiveManager.Instance.objectiveText.text != "Find Key to Cellar");
+
+                if (isEarlyCellarKey == true)
                 {
-                    HandlePickUp(item.itemName);
-
-                    // NEW LOGIC: Play the item's Audio Source
-                    if (item.itemAudioSource != null)
-                    {
-                        item.itemAudioSource.Play();
-
-                        // 1. Turn off all 3D meshes so it looks like it disappeared
-                        Renderer[] renderers = item.GetComponentsInChildren<Renderer>();
-                        foreach (Renderer r in renderers) r.enabled = false;
-
-                        // 2. Turn off all colliders so we can't click it again
-                        Collider[] colliders = item.GetComponentsInChildren<Collider>();
-                        foreach (Collider c in colliders) c.enabled = false;
-
-                        // 3. Destroy the object ONLY after the audio clip finishes playing
-                        Destroy(item.gameObject, item.itemAudioSource.clip.length);
-                    }
-                    else
-                    {
-                        // If there is no audio source, just destroy it instantly like normal
-                        Destroy(item.gameObject);
-                    }
-
+                    // Hide the UI completely so they don't even know it's interactable!
                     UpdateUI(false, "");
+                }
+                else
+                {
+                    // Otherwise, allow normal pickup!
+                    UpdateUI(true, "Press [E] to pick up " + item.itemName);
+                    
+                    if (Keyboard.current.eKey.wasPressedThisFrame)
+                    {
+                        HandlePickUp(item.itemName);
+
+                        // Play the item's Audio Source
+                        if (item.itemAudioSource != null)
+                        {
+                            item.itemAudioSource.Play();
+
+                            // 1. Turn off all 3D meshes so it looks like it disappeared
+                            Renderer[] renderers = item.GetComponentsInChildren<Renderer>();
+                            foreach (Renderer r in renderers) r.enabled = false;
+
+                            // 2. Turn off all colliders so we can't click it again
+                            Collider[] colliders = item.GetComponentsInChildren<Collider>();
+                            foreach (Collider c in colliders) c.enabled = false;
+
+                            // 3. Destroy the object ONLY after the audio clip finishes playing
+                            Destroy(item.gameObject, item.itemAudioSource.clip.length);
+                        }
+                        else
+                        {
+                            // If there is no audio source, just destroy it instantly like normal
+                            Destroy(item.gameObject);
+                        }
+
+                        UpdateUI(false, "");
+                    }
                 }
             }
             else
@@ -119,11 +134,12 @@ public class PlayerInteraction : MonoBehaviour
         else if(itemName == "Cellar Key")
         {
             hasCellarKey = true;
-            ObjectiveManager.Instance.UpdateObjective("Find the Cellar");
+            ObjectiveManager.Instance.UpdateObjective("Head Back to the Cellar");
         }
         else if(itemName == "Cliffard")
         {
             hasCliffard = true;
+            ObjectiveManager.Instance.UpdateObjective("Leave the Cellar");
         }
         else if (itemName == "Flashlight")
         {
