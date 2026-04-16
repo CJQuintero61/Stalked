@@ -1,5 +1,6 @@
 using UnityEngine;
 using TMPro;
+using UnityEngine.SceneManagement; // 1. Add this to check the current scene!
 
 public class ObjectiveManager : MonoBehaviour
 {
@@ -24,8 +25,23 @@ public class ObjectiveManager : MonoBehaviour
 
     void Start()
     {
-        // Set your very first objective when the game starts!
-        UpdateObjective("Find Cliffard");
+        // 2. Get the name of the currently active scene
+        string currentSceneName = SceneManager.GetActiveScene().name;
+
+        // 3. Set the initial objective based on the scene name
+        switch (currentSceneName)
+        {
+            case "Cellar": // Replace with your exact scene name
+                UpdateObjective("Find a Light Source");
+                break;
+            case "Game": 
+                UpdateObjective("Find Cliffard");
+                break;
+            default:
+                // A fallback in case the scene name isn't listed above
+                UpdateObjective("Find Cliffard");
+                break;
+        }
     }
 
     // Any script can call this function to change the text

@@ -17,10 +17,11 @@ public class PlayerInteraction : MonoBehaviour
     public bool hasFlashlight = false;
     public bool hasCellarKey = false;
     public bool hasCliffard = false;
+    public bool isInTriggerZone = false;
 
     private bool isShowingMessage = false;
 
-    void Update()
+void Update()
     {
         if (isShowingMessage == true) return; 
 
@@ -61,59 +62,67 @@ public class PlayerInteraction : MonoBehaviour
             }
             else if (item != null)
             {
-                // NEW: Check if it is the Cellar Key and we DO NOT have the objective yet
                 bool isEarlyCellarKey = item.itemName == "Cellar Key" && 
                                        (ObjectiveManager.Instance == null || 
                                         ObjectiveManager.Instance.objectiveText.text != "Find Key to Cellar");
 
                 if (isEarlyCellarKey == true)
                 {
-                    // Hide the UI completely so they don't even know it's interactable!
-                    UpdateUI(false, "");
+                    // FIXED: Only hide the UI if we are NOT in the exit zone
+                    if (isInTriggerZone == false)
+                    {
+                        UpdateUI(false, "");
+                    }
                 }
                 else
                 {
-                    // Otherwise, allow normal pickup!
                     UpdateUI(true, "Press [E] to pick up " + item.itemName);
                     
                     if (Keyboard.current.eKey.wasPressedThisFrame)
                     {
                         HandlePickUp(item.itemName);
 
-                        // Play the item's Audio Source
                         if (item.itemAudioSource != null)
                         {
                             item.itemAudioSource.Play();
 
-                            // 1. Turn off all 3D meshes so it looks like it disappeared
                             Renderer[] renderers = item.GetComponentsInChildren<Renderer>();
                             foreach (Renderer r in renderers) r.enabled = false;
 
-                            // 2. Turn off all colliders so we can't click it again
                             Collider[] colliders = item.GetComponentsInChildren<Collider>();
                             foreach (Collider c in colliders) c.enabled = false;
 
-                            // 3. Destroy the object ONLY after the audio clip finishes playing
                             Destroy(item.gameObject, item.itemAudioSource.clip.length);
                         }
                         else
                         {
-                            // If there is no audio source, just destroy it instantly like normal
                             Destroy(item.gameObject);
                         }
 
-                        UpdateUI(false, "");
+                        // FIXED: Only hide the UI if we are NOT in the exit zone
+                        if (isInTriggerZone == false)
+                        {
+                            UpdateUI(false, "");
+                        }
                     }
                 }
             }
             else
             {
-                UpdateUI(false, "");
+                // FIXED: Only hide the UI if we are NOT in the exit zone
+                if (isInTriggerZone == false)
+                {
+                    UpdateUI(false, "");
+                }
             }
         }
         else
         {
-            UpdateUI(false, "");
+            // FIXED: Only hide the UI if we are NOT in the exit zone
+            if (isInTriggerZone == false)
+            {
+                UpdateUI(false, "");
+            }
         }
     }
 
@@ -144,6 +153,7 @@ public class PlayerInteraction : MonoBehaviour
         else if (itemName == "Flashlight")
         {
             hasFlashlight = true;
+            ObjectiveManager.Instance.UpdateObjective("Find Cliffard");
 
             FlashlightController fc = GetComponent<FlashlightController>();
             if (fc != null)
