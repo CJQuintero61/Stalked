@@ -1166,6 +1166,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 271222553}
+  - component: {fileID: 271222554}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -1191,6 +1192,18 @@ Transform:
   - {fileID: 728229193}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &271222554
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 271222552}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbd3865ea5be7a64d85d5cd29854d568, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerTeleporter
 --- !u!1 &280327960
 GameObject:
   m_ObjectHideFlags: 0
@@ -3729,7 +3742,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fd9e5bf056df8c94394ca501bc29305d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  sceneToLoad: 
+  sceneToLoad: Cellar
 --- !u!65 &782843134
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -7097,6 +7110,37 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 5852942899850826213, guid: 44b867e33a7d7384480ad9b55bc28e52, type: 3}
   m_PrefabInstance: {fileID: 1009728728442792799}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1503237655
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1503237656}
+  m_Layer: 0
+  m_Name: PlayerCellarExitPosition
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!4 &1503237656
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1503237655}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -493.82, y: 2.58, z: -6.49}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &1508201171 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 27545470619109581, guid: 12a7b9cfd727e9f40bc3494aa9568db1, type: 3}
@@ -17979,6 +18023,7 @@ SceneRoots:
   - {fileID: 1743029421}
   - {fileID: 1645848102}
   - {fileID: 1762161028}
+  - {fileID: 1503237656}
   - {fileID: 461475962}
   - {fileID: 1132183805}
   - {fileID: 5896960472201053417}
