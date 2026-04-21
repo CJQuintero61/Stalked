@@ -2001,12 +2001,24 @@ MonoBehaviour:
   viewAngleThreshold: 0.7
   maxSightDistance: 40
   seenFreezeBuffer: 0.1
+  cornBlocksSight: 1
+  cornNameKeywords:
+  - corn
+  cornSightBlockRadius: 1.5
+  cornSightSampleSpacing: 1.25
+  cornCollisionMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
   chaseUpdateRate: 0.2
   stoppingDistance: 2.2
+  attackDamage: 15
+  attackRange: 2.4
+  attackCooldown: 1.1
+  attackTurnSpeed: 540
   footstepSounds:
   - {fileID: 8300000, guid: 1f2844efbf7abf647ba3d75d510f823a, type: 3}
-  stepDistance: 1.8
-  footstepVolume: 0.65
+  stepDistance: 1.2
+  footstepVolume: 25
   footstepPitch: 0.95
   footstepPitchVariance: 0.08
   minimumFootstepSpeed: 0.15

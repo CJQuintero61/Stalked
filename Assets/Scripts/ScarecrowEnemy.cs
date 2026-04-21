@@ -26,6 +26,12 @@ public class ScarecrowEnemy : MonoBehaviour
     public float chaseUpdateRate = 0.2f;
     public float stoppingDistance = 2.2f;
 
+    [Header("Attack")]
+    public int attackDamage = 15;
+    public float attackRange = 2.4f;
+    public float attackCooldown = 1.1f;
+    public float attackTurnSpeed = 540f;
+
     [Header("Footsteps")]
     public AudioClip[] footstepSounds;
     public float stepDistance = 1.8f;
@@ -52,12 +58,14 @@ public class ScarecrowEnemy : MonoBehaviour
     private float switchPauseTimer;
     private bool needsDestinationRefresh = true;
     private GameObject currentDecoySpot;
+    private PlayerHealth playerHealth;
     private readonly List<GameObject> decoySpots = new List<GameObject>();
     private readonly List<Renderer> cornRenderers = new List<Renderer>();
     private readonly List<TerrainCornDetailLayer> cornDetailLayers = new List<TerrainCornDetailLayer>();
     private readonly List<Vector3> cornTerrainTreePositions = new List<Vector3>();
     private Vector3 lastFootstepPosition;
     private float footstepDistanceTravelled;
+    private float attackCooldownTimer;
     public bool IsSeenByPlayer => isSeen;
 
     private struct TerrainCornDetailLayer
@@ -70,6 +78,7 @@ public class ScarecrowEnemy : MonoBehaviour
     {
         CacheReferences();
         CacheCornSightBlockers();
+        CachePlayerHealth();
 
         lastFootstepPosition = transform.position;
 
@@ -82,22 +91,27 @@ public class ScarecrowEnemy : MonoBehaviour
         if (player == null || playerCamera == null || agent == null)
             return;
 
+        if (attackCooldownTimer > 0f)
+            attackCooldownTimer -= Time.deltaTime;
+
         UpdateSeenState();
         UpdateDecoySwitching();
 
         if (switchPauseTimer > 0f)
         {
             FreezeEnemy();
-            UpdateFootsteps(false);
+            UpdateFootsteps();
             return;
         }
 
         if (isSeen)
             FreezeEnemy();
+        else if (TryAttackPlayer())
+            FreezeEnemy();
         else
             ChasePlayer();
 
-        UpdateFootsteps(!isSeen);
+        UpdateFootsteps();
     }
 
     public void ConfigureSwitchingTargets(List<GameObject> decoys, Transform playerTransform, Camera camera)
@@ -119,6 +133,7 @@ public class ScarecrowEnemy : MonoBehaviour
         }
 
         CacheReferences();
+        CachePlayerHealth();
         ResetSwitchTimer();
     }
 
@@ -585,6 +600,15 @@ public class ScarecrowEnemy : MonoBehaviour
             audioSource = GetComponent<AudioSource>();
     }
 
+    void CachePlayerHealth()
+    {
+        if (player == null)
+            return;
+
+        if (playerHealth == null)
+            playerHealth = player.GetComponent<PlayerHealth>() ?? player.GetComponentInChildren<PlayerHealth>();
+    }
+
     void FreezeEnemy()
     {
         if (!agent.isOnNavMesh)
@@ -597,24 +621,79 @@ public class ScarecrowEnemy : MonoBehaviour
             animator.SetBool("IsMoving", false);
     }
 
-    void UpdateFootsteps(bool canPlayFootsteps)
+    bool TryAttackPlayer()
+    {
+        if (!IsPlayerWithinAttackRange())
+            return false;
+
+        FacePlayer();
+
+        if (agent != null && agent.isOnNavMesh)
+        {
+            agent.isStopped = true;
+            agent.ResetPath();
+        }
+
+        if (animator != null)
+            animator.SetBool("IsMoving", false);
+
+        CachePlayerHealth();
+        if (attackCooldownTimer > 0f || playerHealth == null)
+            return true;
+
+        playerHealth.TakeDamage(attackDamage);
+        attackCooldownTimer = Mathf.Max(0.1f, attackCooldown);
+        Debug.Log($"Scarecrow attacked player for {attackDamage} damage.");
+        return true;
+    }
+
+    bool IsPlayerWithinAttackRange()
+    {
+        if (player == null)
+            return false;
+
+        Vector3 playerPosition = player.position;
+        Vector3 enemyPosition = transform.position;
+        playerPosition.y = 0f;
+        enemyPosition.y = 0f;
+        return Vector3.Distance(enemyPosition, playerPosition) <= attackRange;
+    }
+
+    void FacePlayer()
+    {
+        if (player == null)
+            return;
+
+        Vector3 lookDirection = player.position - transform.position;
+        lookDirection.y = 0f;
+
+        if (lookDirection.sqrMagnitude <= 0.001f)
+            return;
+
+        Quaternion targetRotation = Quaternion.LookRotation(lookDirection.normalized);
+        transform.rotation = Quaternion.RotateTowards(
+            transform.rotation,
+            targetRotation,
+            attackTurnSpeed * Time.deltaTime);
+    }
+
+    void UpdateFootsteps()
     {
         float distanceMoved = Vector3.Distance(transform.position, lastFootstepPosition);
         lastFootstepPosition = transform.position;
 
-        if (!canPlayFootsteps || agent == null || audioSource == null || footstepSounds == null || footstepSounds.Length == 0)
+        if (agent == null || audioSource == null || footstepSounds == null || footstepSounds.Length == 0)
         {
             footstepDistanceTravelled = 0f;
             return;
         }
 
-        if (agent.velocity.magnitude < minimumFootstepSpeed)
-        {
-            footstepDistanceTravelled = 0f;
+        bool isMoving = !agent.isStopped && agent.velocity.magnitude > minimumFootstepSpeed;
+        if (!isMoving)
             return;
-        }
 
         footstepDistanceTravelled += distanceMoved;
+
         if (footstepDistanceTravelled < stepDistance)
             return;
 

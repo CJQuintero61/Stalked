@@ -481,6 +481,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerHealth
   maxHealth: 100
   currentHealth: 0
+  healthBarOffset: {x: 0, y: 24}
 --- !u!1001 &414433209825203980
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -796,6 +797,14 @@ PrefabInstance:
       propertyPath: playerCamera
       value: 
       objectReference: {fileID: 5126527960508462712}
+    - target: {fileID: 5569630345181569615, guid: f9a2551682d3dfd44aca69d8b7ff0940, type: 3}
+      propertyPath: stepDistance
+      value: 1.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 5569630345181569615, guid: f9a2551682d3dfd44aca69d8b7ff0940, type: 3}
+      propertyPath: footstepVolume
+      value: 100
+      objectReference: {fileID: 0}
     - target: {fileID: 7753902566869185411, guid: f9a2551682d3dfd44aca69d8b7ff0940, type: 3}
       propertyPath: m_LocalPosition.x
       value: 3.54
