@@ -3018,6 +3018,7 @@ GameObject:
   - component: {fileID: 728229204}
   - component: {fileID: 728229203}
   - component: {fileID: 728229205}
+  - component: {fileID: 728229206}
   m_Layer: 8
   m_Name: PlayerBody
   m_TagString: Player
@@ -3512,6 +3513,20 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &728229206
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 728229192}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dcdbc5181fc371c4094511bcd1e8dcec, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerHealth
+  maxHealth: 100
+  currentHealth: 0
 --- !u!1 &737412470
 GameObject:
   m_ObjectHideFlags: 0
@@ -6154,6 +6169,70 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1316606724}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &1320241357
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1320241359}
+  - component: {fileID: 1320241358}
+  m_Layer: 0
+  m_Name: NavMeshSurface
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1320241358
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1320241357}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a5ac11cc976e418e8d13136b07e1f52, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.AI.Navigation::Unity.AI.Navigation.NavMeshSurface
+  m_SerializedVersion: 0
+  m_AgentTypeID: 0
+  m_CollectObjects: 0
+  m_Size: {x: 10, y: 10, z: 10}
+  m_Center: {x: 0, y: 2, z: 0}
+  m_LayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_UseGeometry: 0
+  m_DefaultArea: 0
+  m_GenerateLinks: 0
+  m_IgnoreNavMeshAgent: 1
+  m_IgnoreNavMeshObstacle: 1
+  m_OverrideTileSize: 0
+  m_TileSize: 256
+  m_OverrideVoxelSize: 0
+  m_VoxelSize: 0.16666667
+  m_MinRegionArea: 2
+  m_NavMeshData: {fileID: 23800000, guid: db3e08df33a4e7c4584d8fb5552f36f5, type: 2}
+  m_BuildHeightMesh: 0
+--- !u!4 &1320241359
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1320241357}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -9.76689, y: 0.00001, z: -105.98499}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1321743837
 GameObject:
   m_ObjectHideFlags: 0
@@ -17927,6 +18006,75 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.6548785, y: 0.67472905, z: 0.6548785}
   m_Center: {x: 0.00027902424, y: 0.33692768, z: -0.000000014901161}
+--- !u!1 &9101000000000000000
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9101000000000000001}
+  - component: {fileID: 9101000000000000002}
+  m_Layer: 0
+  m_Name: Scarecrow Spawn Manager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9101000000000000001
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9101000000000000000}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -250, y: 0, z: -250}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &9101000000000000002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9101000000000000000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b6da124b9104ce9a6d3196dc4976e68, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ScarecrowSpawnManager
+  scarecrowDecoyPrefab: {fileID: 1253529805570971409, guid: 2fc4aafbb31603e41adaf63683bbca76, type: 3}
+  scarecrowEnemyPrefab: {fileID: 5488483424473804127, guid: f9a2551682d3dfd44aca69d8b7ff0940, type: 3}
+  player: {fileID: 0}
+  playerCamera: {fileID: 0}
+  spawnCenter: {fileID: 0}
+  spawnedParent: {fileID: 0}
+  decoyCount: 100
+  spawnRadius: 225
+  minDistanceFromPlayer: 35
+  minDistanceBetweenScarecrows: 28
+  navMeshSampleDistance: 10
+  groundRaycastHeight: 80
+  groundMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  spawnHeightOffset: 0
+  placementAttempts: 800
+  randomizeYRotation: 1
+  avoidCorn: 1
+  cornNameKeywords:
+  - corn
+  cornClearanceRadius: 5
+  cornCollisionMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
 --- !u!33 &9164372913652712856
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -18028,3 +18176,5 @@ SceneRoots:
   - {fileID: 1132183805}
   - {fileID: 5896960472201053417}
   - {fileID: 708215422973192293}
+  - {fileID: 9101000000000000001}
+  - {fileID: 1320241359}
