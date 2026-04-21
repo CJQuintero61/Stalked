@@ -18041,7 +18041,7 @@ MonoBehaviour:
   playerCamera: {fileID: 0}
   spawnCenter: {fileID: 0}
   spawnedParent: {fileID: 0}
-  decoyCount: 24
+  decoyCount: 100
   spawnRadius: 225
   minDistanceFromPlayer: 35
   minDistanceBetweenScarecrows: 28
