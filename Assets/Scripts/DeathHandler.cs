@@ -2,6 +2,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using Unity.Cinemachine;
+using System.Linq;
 
 public class DeathHandler : MonoBehaviour
 {
@@ -37,29 +38,39 @@ public class DeathHandler : MonoBehaviour
 
     void HandleDeath(Transform killer)
     {
-        // Disable player controller
+        // stop the player from moving after death
         if (playerController != null)
             playerController.enabled = false;
 
-        // Disable ALL virtual cameras so Cinemachine stops competing
-        foreach (CinemachineCamera vc in FindObjectsByType<CinemachineCamera>(FindObjectsSortMode.None))
-            vc.enabled = false;
+        // disable Cinemachine Brain to release control of the camera
+        foreach (Behaviour b in playerCamera.GetComponents<Behaviour>())
+        {
+            if (b.GetType().Name.Contains("CinemachineBrain"))
+            {
+                b.enabled = false;
+                break;
+            }
+        }
 
-        // Disable the brain so Cinemachine fully releases the camera transform
-        if (cinemachineBrain != null)
-            cinemachineBrain.enabled = false;
+        // disable all virtual cameras so nothing fights for camera control
+        foreach (Behaviour b in FindObjectsByType<Behaviour>(FindObjectsSortMode.None))
+        {
+            string typeName = b.GetType().Name;
+            if (typeName.Contains("CinemachineVirtualCamera") || typeName.Contains("CinemachineCamera"))
+                b.enabled = false;
+        }
 
-        // Unparent camera so the player hierarchy can't interfere either
+        // unparent the camera so the player hierarchy can't affect its rotation
         playerCamera.transform.SetParent(null);
 
-        // get the killer's transform to pan the camera to the enemy that killed the player
+        // get the killer's transform
         killerTransform = killer;
-
         StartCoroutine(DeathSequence());
     }
 
     private IEnumerator DeathSequence()
     {
+        // pan the camera toward the killer if one exists
         if (killerTransform != null)
         {
             Quaternion startRot = playerCamera.transform.rotation;
@@ -75,10 +86,11 @@ public class DeathHandler : MonoBehaviour
                 yield return null;
             }
 
+            // brief pause to let the player see what killed them
             yield return new WaitForSeconds(holdOnAngelDuration);
         }
 
-        // Fade to black
+        // fade the screen to black
         if (fadeImage != null)
         {
             fadeImage.gameObject.SetActive(true);
@@ -96,7 +108,32 @@ public class DeathHandler : MonoBehaviour
             }
         }
 
+        // stop all audio after the screen is fully faded
+        foreach (AudioSource audio in FindObjectsByType<AudioSource>(FindObjectsSortMode.None))
+        {
+            audio.Stop();
+        }
+
+        // disable remaining player components now that the screen is hidden
+        foreach (MonoBehaviour mb in GetComponentsInChildren<MonoBehaviour>())
+        {
+            if (mb != this && mb != playerHealth)
+                mb.enabled = false;
+        }
+
+        // disable all enemy scripts in the scene
+        foreach (IDamageDealer enemy in FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None).OfType<IDamageDealer>())
+        {
+            if (enemy is MonoBehaviour mb)
+                mb.enabled = false;
+        }
+
+        // show the death UI
         if (deathUI != null)
+        {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
             deathUI.SetActive(true);
+        }
     }
 }
