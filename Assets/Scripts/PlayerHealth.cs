@@ -8,11 +8,13 @@ public class PlayerHealth : MonoBehaviour
 {
     public int maxHealth = 100;
     public int currentHealth;
+
     public Vector2 healthBarOffset = new Vector2(0f, 24f);
 
     private GameObject createdHudObject;
     private Image healthFillImage;
     private int displayedHealth = int.MinValue;
+    private bool isDead = false;
 
     public float HealthPercent => maxHealth <= 0 ? 0f : currentHealth / (float)maxHealth;
     public event Action<Transform> OnDeath;
@@ -42,7 +44,8 @@ public class PlayerHealth : MonoBehaviour
 
     public void TakeDamage(int amount, IDamageDealer dealer = null)
     {
-        if (amount <= 0)
+        // if already dead, skip this function
+        if (amount <= 0 || isDead)
         {
             return;
         }
@@ -209,6 +212,13 @@ public class PlayerHealth : MonoBehaviour
 
     void Die(IDamageDealer dealer)
     {
+        // prevent more calls to Die()
+        if (isDead)
+        {
+            return;
+        }
+
+        isDead = true;
         Debug.Log("Player died from: " + dealer);
         OnDeath?.Invoke(dealer?.DamageSourceTransform);
     }
