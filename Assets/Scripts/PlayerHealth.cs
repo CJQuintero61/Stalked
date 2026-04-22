@@ -1,6 +1,8 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Events;
 using TMPro;
+using System;
 
 public class PlayerHealth : MonoBehaviour
 {
@@ -13,6 +15,7 @@ public class PlayerHealth : MonoBehaviour
     private int displayedHealth = int.MinValue;
 
     public float HealthPercent => maxHealth <= 0 ? 0f : currentHealth / (float)maxHealth;
+    public event Action<Transform> OnDeath;
 
     void Start()
     {
@@ -37,7 +40,7 @@ public class PlayerHealth : MonoBehaviour
         }
     }
 
-    public void TakeDamage(int amount)
+    public void TakeDamage(int amount, IDamageDealer dealer = null)
     {
         if (amount <= 0)
         {
@@ -51,7 +54,7 @@ public class PlayerHealth : MonoBehaviour
 
         if (currentHealth <= 0)
         {
-            Die();
+            Die(dealer);
         }
     }
 
@@ -204,9 +207,10 @@ public class PlayerHealth : MonoBehaviour
             healthPercent);
     }
 
-    void Die()
+    void Die(IDamageDealer dealer)
     {
-        Debug.Log("Player died.");
+        Debug.Log("Player died from: " + dealer);
+        OnDeath?.Invoke(dealer?.DamageSourceTransform);
     }
 
     void OnDestroy()
