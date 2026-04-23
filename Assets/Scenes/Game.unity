@@ -3534,6 +3534,12 @@ MonoBehaviour:
   maxHealth: 100
   currentHealth: 0
   healthBarOffset: {x: 0, y: 24}
+  hurtSounds:
+  - {fileID: 8300000, guid: 065aa1db265e7ef4cb752ef17e609a65, type: 3}
+  - {fileID: 8300000, guid: 95743fee66c7c464cb2bb00d6892a50e, type: 3}
+  - {fileID: 8300000, guid: ee8a46d9351539540a468bbce92085cc, type: 3}
+  - {fileID: 8300000, guid: 9f519d1399aeadc4c8768bbf9cd9238e, type: 3}
+  hurtVolume: 1
 --- !u!114 &728229207
 MonoBehaviour:
   m_ObjectHideFlags: 0

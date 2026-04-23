@@ -19,6 +19,11 @@ public class PlayerHealth : MonoBehaviour
     public float HealthPercent => maxHealth <= 0 ? 0f : currentHealth / (float)maxHealth;
     public event Action<Transform> OnDeath;
 
+    [Header("Audio")]
+    public AudioClip[] hurtSounds;
+    public float hurtVolume = 1f;
+    private AudioSource audioSource;
+
     void Start()
     {
         maxHealth = Mathf.Max(1, maxHealth);
@@ -26,6 +31,10 @@ public class PlayerHealth : MonoBehaviour
 
         CreateHealthBar();
         RefreshHealthBar();
+
+        audioSource = GetComponent<AudioSource>();
+        if (audioSource == null)
+            audioSource = gameObject.AddComponent<AudioSource>();
     }
 
     void Update()
@@ -54,6 +63,7 @@ public class PlayerHealth : MonoBehaviour
         Debug.Log("Player took damage. Current HP: " + currentHealth);
 
         RefreshHealthBar();
+        PlayHurtSound();
 
         if (currentHealth <= 0)
         {
@@ -208,6 +218,15 @@ public class PlayerHealth : MonoBehaviour
             new Color(0.45f, 0.02f, 0.02f, 1f),
             new Color(0.95f, 0.08f, 0.08f, 1f),
             healthPercent);
+    }
+
+    void PlayHurtSound()
+    {
+        if (audioSource == null || hurtSounds == null || hurtSounds.Length == 0) return;
+
+        // choose a random hurt sound from the array
+        AudioClip clip = hurtSounds[UnityEngine.Random.Range(0, hurtSounds.Length)];
+        audioSource.PlayOneShot(clip, hurtVolume);
     }
 
     void Die(IDamageDealer dealer)
