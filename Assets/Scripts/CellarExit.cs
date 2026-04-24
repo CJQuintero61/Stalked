@@ -20,7 +20,7 @@ public class CellarExit : MonoBehaviour
     {
         if (playerInZone == true && playerScript != null)
         {
-            if (playerScript.hasCliffard == true)
+            if (GameManager.Instance.hasCliffard == true)
             {
                 UpdateUI(true, "Press E to Exit Cellar");
 

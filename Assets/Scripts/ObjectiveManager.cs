@@ -1,10 +1,9 @@
 using UnityEngine;
 using TMPro;
-using UnityEngine.SceneManagement; // 1. Add this to check the current scene!
+using UnityEngine.SceneManagement;
 
 public class ObjectiveManager : MonoBehaviour
 {
-    // This is the "Singleton". It allows any script to talk to this one instantly!
     public static ObjectiveManager Instance; 
 
     [Header("UI Reference")]
@@ -12,10 +11,10 @@ public class ObjectiveManager : MonoBehaviour
 
     void Awake()
     {
-        // Set up the Singleton logic
         if (Instance == null) 
         { 
             Instance = this; 
+            DontDestroyOnLoad(gameObject); // Keep this alive between scenes
         }
         else 
         { 
@@ -23,34 +22,62 @@ public class ObjectiveManager : MonoBehaviour
         }
     }
 
-    void Start()
+    void OnEnable()
     {
-        // 2. Get the name of the currently active scene
-        string currentSceneName = SceneManager.GetActiveScene().name;
+        SceneManager.sceneLoaded += OnSceneLoaded;
+    }
 
-        // 3. Set the initial objective based on the scene name
-        switch (currentSceneName)
+    void OnDisable()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+    void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        RefreshObjective();
+    }
+
+    public void RefreshObjective()
+    {
+        string currentSceneName = SceneManager.GetActiveScene().name;
+        Debug.Log("Scene loaded: " + currentSceneName);
+
+        if (currentSceneName == "Cellar")
         {
-            case "Cellar": // Replace with your exact scene name
-                UpdateObjective("Find a Light Source");
-                break;
-            case "Game": 
+            UpdateObjective("Find a Light Source");
+        }
+        else if (currentSceneName == "Game") 
+        {
+            // Check if manager exists
+            if (GameManager.Instance == null) {
+                Debug.LogError("ObjectiveManager: GameManager.Instance is NULL!");
+                return;
+            }
+
+            bool allItemsCollected = GameManager.Instance.hasCollar && 
+                                     GameManager.Instance.hasFlashlight && 
+                                     GameManager.Instance.hasCellarKey;
+            
+            Debug.Log("Checking items... Collar: " + GameManager.Instance.hasCollar + 
+                      " | Flashlight: " + GameManager.Instance.hasFlashlight + 
+                      " | Key: " + GameManager.Instance.hasCellarKey);
+
+            if (allItemsCollected)
+            {
+                UpdateObjective("Escape");
+            }
+            else
+            {
                 UpdateObjective("Find Cliffard");
-                break;
-            default:
-                // A fallback in case the scene name isn't listed above
-                UpdateObjective("Find Cliffard");
-                break;
+            }
         }
     }
 
-    // Any script can call this function to change the text
     public void UpdateObjective(string newObjective)
     {
         if (objectiveText != null)
         {
             objectiveText.text = newObjective;
-            Debug.Log("Objective Updated: " + newObjective);
         }
     }
 }

@@ -2,48 +2,74 @@ using UnityEngine;
 
 public class StopAndPlayTrigger : MonoBehaviour
 {
+    [Header("Persistence")]
+    [Tooltip("Give this a unique ID, like 'StopBarkingEvent'")]
+    public string uniqueID;
+
     [Header("Audio to Stop")]
-    public GameObject audioObjectToStop; // The looping barking object
+    public GameObject audioObjectToStop; 
 
     [Header("Audio to Play")]
-    public AudioSource oneShotAudio; // The new single-play sound
+    public AudioClip oneShotSound; 
 
     [Header("Narrative Settings (Optional)")]
     public string newObjectiveText; 
 
     private bool hasTriggered = false;
 
-    void OnTriggerEnter(Collider other)
+    void Start()
     {
-        // 1. Make sure it's the player and it hasn't triggered yet
-        if (other.CompareTag("Player") && hasTriggered == false)
+        if (GameManager.Instance != null && !string.IsNullOrEmpty(uniqueID))
         {
-            // 2. Grab the PlayerInteraction script (using the bulletproof root method!)
-            PlayerInteraction playerScript = other.transform.root.GetComponentInChildren<PlayerInteraction>();
+            bool wasTriggered = GameManager.Instance.GetObjectState(uniqueID, false);
 
-            // 3. Check if we found the script AND the player has the collar
-            if (playerScript != null && playerScript.hasCollar == true)
+            if (wasTriggered == true)
             {
-                // 4. Instantly turn OFF the looping barking audio
+                // Ensure the looping audio stays permanently off
                 if (audioObjectToStop != null)
                 {
                     audioObjectToStop.SetActive(false);
                 }
 
-                // 5. Play the NEW single sound effect
-                if (oneShotAudio != null)
+                // YOUR IDEA: Cleanly turns off this entire checkpoint object
+                gameObject.SetActive(false);
+            }
+        }
+    }
+
+    void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Player") && hasTriggered == false)
+        {
+            PlayerInteraction playerScript = other.transform.root.GetComponentInChildren<PlayerInteraction>();
+
+            if (playerScript != null && GameManager.Instance != null && GameManager.Instance.hasCollar == true)
+            {
+                if (audioObjectToStop != null)
                 {
-                    oneShotAudio.Play();
+                    audioObjectToStop.SetActive(false);
                 }
 
-                // 6. Update the objective text (if you typed one in)
+                if (oneShotSound != null)
+                {
+                    // Spawns independently, so it survives the trigger shutting down
+                    AudioSource.PlayClipAtPoint(oneShotSound, transform.position);
+                }
+
                 if (ObjectiveManager.Instance != null && !string.IsNullOrEmpty(newObjectiveText))
                 {
                     ObjectiveManager.Instance.UpdateObjective(newObjectiveText);
                 }
 
-                // 7. Lock the trigger forever
                 hasTriggered = true;
+
+                if (!string.IsNullOrEmpty(uniqueID))
+                {
+                    GameManager.Instance.SaveObjectState(uniqueID, true);
+                }
+
+                // YOUR IDEA: Turns off the empty object right after triggering
+                gameObject.SetActive(false);
             }
         }
     }

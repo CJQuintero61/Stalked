@@ -3,6 +3,10 @@ using UnityEngine.SceneManagement;
 
 public class CellarInteractable : MonoBehaviour
 {
+    [Header("Persistence")]
+    [Tooltip("Every cellar entrance needs a unique ID! (e.g., 'MainCellarHatch')")]
+    public string uniqueID;
+
     [Header("Scene Settings")]
     public string sceneToLoad; 
 
@@ -14,13 +18,34 @@ public class CellarInteractable : MonoBehaviour
     public GameObject hiddenOpenDoors; 
 
     [Header("Audio")]
-    public AudioSource openSound; // NEW: The audio source that plays the unlock/open sound
+    public AudioSource openSound; 
 
     void Start()
     {
-        // Automatically ensure the correct doors are visible/hidden when the game starts
-        if (closedDoor != null) closedDoor.SetActive(true);
-        if (hiddenOpenDoors != null) hiddenOpenDoors.SetActive(false);
+        // --- PERSISTENCE LOGIC ADDED HERE ---
+        // 1. When the scene loads, check if we already unlocked this door
+        if (GameManager.Instance != null && !string.IsNullOrEmpty(uniqueID))
+        {
+            // We use 'true' in the dictionary to mean "has been unlocked"
+            bool wasUnlocked = GameManager.Instance.GetObjectState(uniqueID, false);
+            
+            if (wasUnlocked == true)
+            {
+                isLocked = false;
+            }
+        }
+
+        // 2. Snap the visual models to match the current lock state
+        if (isLocked == true)
+        {
+            if (closedDoor != null) closedDoor.SetActive(true);
+            if (hiddenOpenDoors != null) hiddenOpenDoors.SetActive(false);
+        }
+        else
+        {
+            if (closedDoor != null) closedDoor.SetActive(false);
+            if (hiddenOpenDoors != null) hiddenOpenDoors.SetActive(true);
+        }
     }
 
     public bool TryOpenCellar(bool playerHasKey)
@@ -45,6 +70,13 @@ public class CellarInteractable : MonoBehaviour
                 }
                 
                 ObjectiveManager.Instance.UpdateObjective("Investigate the Cellar");
+
+                // --- PERSISTENCE LOGIC ADDED HERE ---
+                // 5. Tell the GameManager to remember we unlocked this!
+                if (GameManager.Instance != null && !string.IsNullOrEmpty(uniqueID))
+                {
+                    GameManager.Instance.SaveObjectState(uniqueID, true); 
+                }
 
                 return true; // Success! It unlocked and swapped the doors.
             }

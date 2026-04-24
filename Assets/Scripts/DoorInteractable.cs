@@ -2,6 +2,9 @@ using UnityEngine;
 
 public class DoorInteractable : MonoBehaviour
 {
+    [Tooltip("Every door needs a unique ID! (e.g., 'KitchenDoor', 'CellarDoor')")]
+    public string uniqueID;
+
     public bool isOpen = false;
     public float openRotation = 90f;
     public float smooth = 2f;
@@ -26,6 +29,22 @@ public class DoorInteractable : MonoBehaviour
         // Assign the clip to the source once at the start
         if (audioSource != null && doorClip != null)
             audioSource.clip = doorClip;
+
+        // --- PERSISTENCE LOGIC ADDED HERE ---
+        // 1. When the scene loads, check if the GameManager remembers this specific door
+        if (GameManager.Instance != null && !string.IsNullOrEmpty(uniqueID))
+        {
+            isOpen = GameManager.Instance.GetObjectState(uniqueID, false);
+
+            if (isOpen == true)
+            {
+                // Calculate exactly where the door should be if it's open
+                targetRotation = defaultRotation * Quaternion.Euler(0, openRotation, 0);
+                
+                // SNAP the door's actual physical rotation instantly so the player doesn't see it moving
+                transform.rotation = targetRotation;
+            }
+        }
     }
 
     void Update()
@@ -39,6 +58,13 @@ public class DoorInteractable : MonoBehaviour
         targetRotation = isOpen ? defaultRotation * Quaternion.Euler(0, openRotation, 0) : defaultRotation;
 
         PlayDoorSound();
+
+        // --- PERSISTENCE LOGIC ADDED HERE ---
+        // 2. Whenever the player opens or closes the door, tell the GameManager to remember the new state
+        if (GameManager.Instance != null && !string.IsNullOrEmpty(uniqueID))
+        {
+            GameManager.Instance.SaveObjectState(uniqueID, isOpen);
+        }
     }
 
     private void PlayDoorSound()

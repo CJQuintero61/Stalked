@@ -12,16 +12,14 @@ public class PlayerInteraction : MonoBehaviour
     public GameObject interactPanel; 
     public TextMeshProUGUI promptText; 
 
-    [Header("Booleans")]
-    public bool hasCollar = false;
-    public bool hasFlashlight = false;
-    public bool hasCellarKey = false;
-    public bool hasCliffard = false;
+    // REMOVED the local booleans from here. 
+    // They now live in GameManager.Instance.
+    [Header("State")]
     public bool isInTriggerZone = false;
 
     private bool isShowingMessage = false;
 
-void Update()
+    void Update()
     {
         if (isShowingMessage == true) return; 
 
@@ -52,7 +50,8 @@ void Update()
                 
                 if (Keyboard.current.eKey.wasPressedThisFrame) 
                 {
-                    bool success = cellar.TryOpenCellar(hasCellarKey);
+                    // CHANGED: Check the GameManager for the key, not the local variable
+                    bool success = cellar.TryOpenCellar(GameManager.Instance.hasCellarKey);
                     if (success == false)
                     {
                         StartCoroutine(ShowTemporaryMessage("It's locked. Find a key.", 2f));
@@ -68,7 +67,6 @@ void Update()
 
                 if (isEarlyCellarKey == true)
                 {
-                    // FIXED: Only hide the UI if we are NOT in the exit zone
                     if (isInTriggerZone == false)
                     {
                         UpdateUI(false, "");
@@ -80,7 +78,7 @@ void Update()
                     
                     if (Keyboard.current.eKey.wasPressedThisFrame)
                     {
-                        HandlePickUp(item.itemName);
+                        HandlePickUp(item.itemName, item);
 
                         if (item.itemAudioSource != null)
                         {
@@ -99,7 +97,6 @@ void Update()
                             Destroy(item.gameObject);
                         }
 
-                        // FIXED: Only hide the UI if we are NOT in the exit zone
                         if (isInTriggerZone == false)
                         {
                             UpdateUI(false, "");
@@ -109,7 +106,6 @@ void Update()
             }
             else
             {
-                // FIXED: Only hide the UI if we are NOT in the exit zone
                 if (isInTriggerZone == false)
                 {
                     UpdateUI(false, "");
@@ -118,7 +114,6 @@ void Update()
         }
         else
         {
-            // FIXED: Only hide the UI if we are NOT in the exit zone
             if (isInTriggerZone == false)
             {
                 UpdateUI(false, "");
@@ -134,25 +129,27 @@ void Update()
         isShowingMessage = false; 
     }
 
-    void HandlePickUp(string itemName)
+    // CHANGED: Added the ItemObject reference so we can register the pickup with the PersistentManager
+    void HandlePickUp(string itemName, ItemObject itemRef)
     {
+        // 1. Update the boolean in the GameManager
         if (itemName == "Collar")
         {
-            hasCollar = true;
+            GameManager.Instance.hasCollar = true;
         }
         else if(itemName == "Cellar Key")
         {
-            hasCellarKey = true;
+            GameManager.Instance.hasCellarKey = true;
             ObjectiveManager.Instance.UpdateObjective("Head Back to the Cellar");
         }
         else if(itemName == "Cliffard")
         {
-            hasCliffard = true;
+            GameManager.Instance.hasCliffard = true;
             ObjectiveManager.Instance.UpdateObjective("Leave the Cellar");
         }
         else if (itemName == "Flashlight")
         {
-            hasFlashlight = true;
+            GameManager.Instance.hasFlashlight = true;
             ObjectiveManager.Instance.UpdateObjective("Find Cliffard");
 
             FlashlightController fc = GetComponent<FlashlightController>();
@@ -160,6 +157,17 @@ void Update()
             {
                 fc.EnableFlashlight(); 
             }
+        }
+
+        // 2. Tell the specific scene object to save its destroyed state
+        PersistentSceneObject pso = itemRef.GetComponent<PersistentSceneObject>();
+        if (pso != null)
+        {
+            pso.RegisterPickup();
+        }
+        else
+        {
+            Debug.LogWarning($"Item {itemName} is missing a PersistentSceneObject script!");
         }
     }
     

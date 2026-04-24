@@ -2,31 +2,45 @@ using UnityEngine;
 
 public class BarkingStartsCellar : MonoBehaviour
 {
+    [Header("Persistence")]
+    [Tooltip("Give this a unique ID, like 'CellarBarkingEvent'")]
+    public string uniqueID;
+
     [Header("Audio Settings")]
     public GameObject newBarkingAudio; 
 
-    [Header("Narrative Settings (Optional)")]
+    [Header("Narrative Settings")]
     public string newObjectiveText; 
 
     private bool hasTriggered = false;
+
+    void Start()
+    {
+        if (GameManager.Instance != null && !string.IsNullOrEmpty(uniqueID))
+        {
+            bool wasTriggered = GameManager.Instance.GetObjectState(uniqueID, false);
+
+            if (wasTriggered == true)
+            {
+                // REPLACED: Destroy(gameObject);
+                // Instead, just turn off the collider so it can't be walked into.
+                // This keeps the parent object alive so it doesn't break your hierarchy!
+                GetComponent<Collider>().enabled = false;
+                this.enabled = false; 
+            }
+        }
+    }
 
     void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Player") && hasTriggered == false)
         {
-            Debug.Log("1. Player touched the trigger!");
-
-            // Using GetComponentInParent just to be safe!
             PlayerInteraction playerScript = other.transform.root.GetComponentInChildren<PlayerInteraction>();
 
             if (playerScript != null)
             {
-                Debug.Log("2. Found the PlayerInteraction script! Does player have collar? " + playerScript.hasCollar);
-
-                if (playerScript.hasCollar == true)
+                if (GameManager.Instance != null && GameManager.Instance.hasCollar == true)
                 {
-                    Debug.Log("3. Success! Turning on the audio.");
-                    
                     if (newBarkingAudio != null) newBarkingAudio.SetActive(true);
                     
                     if (ObjectiveManager.Instance != null && !string.IsNullOrEmpty(newObjectiveText))
@@ -35,11 +49,21 @@ public class BarkingStartsCellar : MonoBehaviour
                     }
 
                     hasTriggered = true;
+
+                    if (!string.IsNullOrEmpty(uniqueID))
+                    {
+                        GameManager.Instance.SaveObjectState(uniqueID, true);
+                    }
+
+                    // REPLACED: Destroy(gameObject);
+                    // Disarm the trigger so it cannot fire again while you are standing here.
+                    GetComponent<Collider>().enabled = false;
+                    this.enabled = false;
                 }
             }
             else
             {
-                Debug.LogError("Uh oh! Could not find the PlayerInteraction script on the player.");
+                Debug.LogError("Could not find the PlayerInteraction script on the player.");
             }
         }
     }

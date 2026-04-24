@@ -9,8 +9,10 @@ public class FlashlightController : MonoBehaviour
     public AudioSource audioSource;
     public TextMeshProUGUI promptText; 
 
+    // REMOVED: public bool hasFlashlight = false;
+    // We no longer need this because the GameManager tracks it permanently!
+
     [Header("Settings")]
-    public bool hasFlashlight = false;
     public AudioClip soundOn;
     public AudioClip soundOff;
 
@@ -22,19 +24,27 @@ public class FlashlightController : MonoBehaviour
         
         // Ensure the AudioSource is assigned
         if (audioSource == null) audioSource = GetComponent<AudioSource>();
+        
+        // Ensure the flashlight starts turned off when entering a new scene
+        if (flashlightLight != null) flashlightLight.SetActive(false);
     }
 
     void Update()
     {
-        if (hasFlashlight && Keyboard.current.fKey.wasPressedThisFrame)
+        // UPDATED: Check the GameManager directly. 
+        // Now, if you press 'F', it asks the persistent memory if you actually own the flashlight.
+        if (GameManager.Instance != null && GameManager.Instance.hasFlashlight == true)
         {
-            ToggleFlashlight();
+            if (Keyboard.current.fKey.wasPressedThisFrame)
+            {
+                ToggleFlashlight();
+            }
         }
     }
 
     public void EnableFlashlight()
     {
-        hasFlashlight = true;
+        // This is called by your PlayerInteraction script the very first time you pick it up
         if(promptText != null) promptText.gameObject.SetActive(true);
     }
 
