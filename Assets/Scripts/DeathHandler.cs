@@ -11,6 +11,7 @@ public class DeathHandler : MonoBehaviour
     public Image fadeImage;
     public GameObject deathUI;
     public MonoBehaviour playerController;
+    private MonoBehaviour flashlightController;
 
     [Header("Timing")]
     public float cameraLerpDuration = 1.5f;
@@ -28,6 +29,9 @@ public class DeathHandler : MonoBehaviour
 
         // Cache the brain on the camera
         cinemachineBrain = playerCamera.GetComponent<CinemachineBrain>();
+
+        // Cache the flashlight controller reference if it exists
+        flashlightController = playerCamera.GetComponent<FlashlightController>();
     }
 
     void OnDestroy()
@@ -59,6 +63,11 @@ public class DeathHandler : MonoBehaviour
             if (typeName.Contains("CinemachineVirtualCamera") || typeName.Contains("CinemachineCamera"))
                 b.enabled = false;
         }
+
+        // disable the flashlight if the player has one
+        if (flashlightController != null)
+            flashlightController.enabled = false;
+
 
         // unparent the camera so the player hierarchy can't affect its rotation
         playerCamera.transform.SetParent(null);
