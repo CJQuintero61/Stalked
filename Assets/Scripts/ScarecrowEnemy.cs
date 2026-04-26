@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
-public class ScarecrowEnemy : MonoBehaviour
+public class ScarecrowEnemy : MonoBehaviour, IDamageDealer
 {
     [Header("References")]
     public Transform player;
@@ -67,6 +67,8 @@ public class ScarecrowEnemy : MonoBehaviour
     private float footstepDistanceTravelled;
     private float attackCooldownTimer;
     public bool IsSeenByPlayer => isSeen;
+
+    public Transform DamageSourceTransform => eyePoint != null ? eyePoint : transform;
 
     private struct TerrainCornDetailLayer
     {
@@ -641,7 +643,7 @@ public class ScarecrowEnemy : MonoBehaviour
         if (attackCooldownTimer > 0f || playerHealth == null)
             return true;
 
-        playerHealth.TakeDamage(attackDamage);
+        playerHealth.TakeDamage(attackDamage, this);
         attackCooldownTimer = Mathf.Max(0.1f, attackCooldown);
         Debug.Log($"Scarecrow attacked player for {attackDamage} damage.");
         return true;

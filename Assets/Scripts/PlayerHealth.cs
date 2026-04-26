@@ -1,18 +1,39 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Events;
 using TMPro;
+using System;
 
 public class PlayerHealth : MonoBehaviour
 {
     public int maxHealth = 100;
     public int currentHealth;
+
     public Vector2 healthBarOffset = new Vector2(0f, 24f);
 
     private GameObject createdHudObject;
     private Image healthFillImage;
     private int displayedHealth = int.MinValue;
+    private bool isDead = false;
 
+    // calculate health percent
     public float HealthPercent => maxHealth <= 0 ? 0f : currentHealth / (float)maxHealth;
+    public event Action<Transform> OnDeath;
+
+    // audio for taking damage and dying
+    [Header("Audio")]
+    public AudioClip[] hurtSounds;
+    public AudioClip deathSound;
+    public float hurtVolume = 1f;
+    public float deathVolume = 1f;
+    private AudioSource audioSource;
+
+    // the red screen overlay that appears when taking damage
+    [Header("Damage Vignette")]
+    public Image damageVignette;
+    public float vignetteMaxAlpha = 0.6f;
+    public float vignetteFadeSpeed = 3f;
+    private float vignetteAlpha = 0f;
 
     void Start()
     {
@@ -21,6 +42,10 @@ public class PlayerHealth : MonoBehaviour
 
         CreateHealthBar();
         RefreshHealthBar();
+
+        audioSource = GetComponent<AudioSource>();
+        if (audioSource == null)
+            audioSource = gameObject.AddComponent<AudioSource>();
     }
 
     void Update()
@@ -35,11 +60,20 @@ public class PlayerHealth : MonoBehaviour
         {
             RefreshHealthBar();
         }
+
+        // fade vignette back to transparent over time
+        if (vignetteAlpha > 0f)
+        {
+            vignetteAlpha -= Time.deltaTime * vignetteFadeSpeed;
+            vignetteAlpha = Mathf.Max(0f, vignetteAlpha);
+            SetVignetteAlpha(vignetteAlpha);
+        }
     }
 
-    public void TakeDamage(int amount)
+    public void TakeDamage(int amount, IDamageDealer dealer = null)
     {
-        if (amount <= 0)
+        // if already dead, skip this function
+        if (amount <= 0 || isDead)
         {
             return;
         }
@@ -48,10 +82,17 @@ public class PlayerHealth : MonoBehaviour
         Debug.Log("Player took damage. Current HP: " + currentHealth);
 
         RefreshHealthBar();
+        FlashVignette();
 
         if (currentHealth <= 0)
         {
-            Die();
+            Die(dealer);
+        }
+        else
+        {
+            // only play hurt sound if the player is still alive after taking damage
+            // else the death sound will play instead
+            PlayHurtSound();
         }
     }
 
@@ -204,9 +245,28 @@ public class PlayerHealth : MonoBehaviour
             healthPercent);
     }
 
-    void Die()
+    void PlayHurtSound()
     {
-        Debug.Log("Player died.");
+        if (audioSource == null || hurtSounds == null || hurtSounds.Length == 0) return;
+
+        // choose a random hurt sound from the array
+        AudioClip clip = hurtSounds[UnityEngine.Random.Range(0, hurtSounds.Length)];
+        audioSource.PlayOneShot(clip, hurtVolume);
+    }
+
+    void Die(IDamageDealer dealer)
+    {
+        // prevent more calls to Die()
+        if (isDead)
+        {
+            return;
+        }
+
+        isDead = true;
+        Debug.Log("Player died from: " + dealer);
+
+        PlayDeathSound();
+        OnDeath?.Invoke(dealer?.DamageSourceTransform);
     }
 
     void OnDestroy()
@@ -215,5 +275,25 @@ public class PlayerHealth : MonoBehaviour
         {
             Destroy(createdHudObject);
         }
+    }
+
+    void PlayDeathSound()
+    {
+        if (audioSource == null || deathSound == null) return;
+        audioSource.PlayOneShot(deathSound, deathVolume);
+    }
+
+    void SetVignetteAlpha(float alpha)
+    {
+        if (damageVignette == null) return;
+        Color c = damageVignette.color;
+        c.a = alpha;
+        damageVignette.color = c;
+    }
+
+    void FlashVignette()
+    {
+        vignetteAlpha = vignetteMaxAlpha;
+        SetVignetteAlpha(vignetteAlpha);
     }
 }
