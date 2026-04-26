@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
+using Unity.AI.Navigation;
 
 /// <summary>
 /// Generates a procedural maze and sets up interaction triggers for the Start and End.
@@ -51,6 +53,18 @@ public class MazeGenerator : MonoBehaviour
     [Tooltip("UI Prompt to show when the player can exit.")]
     public GameObject exitUIPrompt;
 
+    [Header("Doll Enemy")]
+    [Tooltip("Optional doll prefab to spawn after the maze and runtime NavMesh are built.")]
+    public GameObject dollEnemyPrefab;
+    [Tooltip("Optional explicit player reference for the doll enemy.")]
+    public Transform playerTransform;
+    [Tooltip("Optional explicit player camera reference for the doll enemy.")]
+    public Camera playerCamera;
+    [Tooltip("Layers included when baking the runtime NavMesh for the maze.")]
+    public LayerMask runtimeNavMeshLayerMask = ~0;
+    [Tooltip("Vertical offset applied to the doll spawn point after sampling the NavMesh.")]
+    public float dollSpawnHeightOffset = 0f;
+
     private class Cell
     {
         public bool visited = false;
@@ -62,11 +76,18 @@ public class MazeGenerator : MonoBehaviour
 
     private Cell[,] grid;
     private GameObject currentMazeParent;
+    private readonly List<GameObject> generatedRoofObjects = new List<GameObject>();
 
     void Start()
     {
         GenerateMazeData();
         BuildMazeIntoScene();
+
+        if (dollEnemyPrefab != null)
+        {
+            BuildRuntimeNavMesh();
+            SpawnDollEnemy();
+        }
     }
 
     void GenerateMazeData()
@@ -129,6 +150,7 @@ public class MazeGenerator : MonoBehaviour
     {
         currentMazeParent = new GameObject("Procedural Maze");
         currentMazeParent.transform.position = Vector3.zero;
+        generatedRoofObjects.Clear();
 
         // 1. Generate the Floor
         if (floorPrefab != null)
@@ -162,7 +184,8 @@ public class MazeGenerator : MonoBehaviour
                     for (int y = 0; y < height; y++)
                     {
                         Vector3 cellPos = new Vector3(x * cellSize, wallHeight, y * cellSize);
-                        Instantiate(roofPrefab, cellPos, roofPrefab.transform.rotation, currentMazeParent.transform);
+                        GameObject roofTile = Instantiate(roofPrefab, cellPos, roofPrefab.transform.rotation, currentMazeParent.transform);
+                        generatedRoofObjects.Add(roofTile);
                     }
                 }
             }
@@ -186,6 +209,7 @@ public class MazeGenerator : MonoBehaviour
                 
                 // Rotate the roof 180 degrees so the textured face points DOWN
                 roof.transform.rotation = Quaternion.Euler(180, 0, 0);
+                generatedRoofObjects.Add(roof);
             }
         }
 
@@ -315,6 +339,180 @@ public class MazeGenerator : MonoBehaviour
             wall.transform.localScale = primitiveScale;
             wall.transform.SetParent(parent);
         }
+    }
+
+    void BuildRuntimeNavMesh()
+    {
+        if (currentMazeParent == null)
+            return;
+
+        NavMeshSurface surface = currentMazeParent.GetComponent<NavMeshSurface>();
+        if (surface == null)
+            surface = currentMazeParent.AddComponent<NavMeshSurface>();
+
+        surface.collectObjects = CollectObjects.Children;
+        surface.layerMask = runtimeNavMeshLayerMask;
+        surface.ignoreNavMeshAgent = true;
+        surface.ignoreNavMeshObstacle = true;
+
+        SetRoofObjectsActive(false);
+
+        surface.useGeometry = NavMeshCollectGeometry.PhysicsColliders;
+        surface.BuildNavMesh();
+
+        if (!HasAnyValidMazeNavMeshPosition())
+        {
+            surface.useGeometry = NavMeshCollectGeometry.RenderMeshes;
+            surface.BuildNavMesh();
+        }
+
+        SetRoofObjectsActive(true);
+    }
+
+    void SpawnDollEnemy()
+    {
+        if (!TryGetDollSpawnPoint(out Vector3 spawnPosition))
+        {
+            Debug.LogWarning("MazeGenerator could not find a valid NavMesh position for the doll enemy.", this);
+            return;
+        }
+
+        Transform resolvedPlayer = ResolvePlayerTransform();
+        Camera resolvedCamera = ResolvePlayerCamera();
+        Quaternion spawnRotation = dollEnemyPrefab.transform.rotation;
+
+        if (resolvedPlayer != null)
+        {
+            Vector3 lookDirection = resolvedPlayer.position - spawnPosition;
+            lookDirection.y = 0f;
+            if (lookDirection.sqrMagnitude > 0.001f)
+                spawnRotation = Quaternion.LookRotation(lookDirection.normalized, Vector3.up);
+        }
+
+        GameObject doll = Instantiate(dollEnemyPrefab, spawnPosition, spawnRotation, currentMazeParent.transform);
+        DollNightcrawlerFollower follower = doll.GetComponent<DollNightcrawlerFollower>();
+        if (follower == null)
+            follower = doll.GetComponentInChildren<DollNightcrawlerFollower>();
+
+        if (follower == null)
+        {
+            Debug.LogWarning("The assigned doll enemy prefab does not contain a DollNightcrawlerFollower script.", doll);
+            return;
+        }
+
+        follower.playerTarget = resolvedPlayer;
+        follower.playerCamera = resolvedCamera;
+    }
+
+    bool TryGetDollSpawnPoint(out Vector3 spawnPosition)
+    {
+        Transform resolvedPlayer = ResolvePlayerTransform();
+        Vector3 referencePosition = resolvedPlayer != null
+            ? resolvedPlayer.position
+            : GetCellCenterWorldPosition(0, 0);
+
+        bool foundSpawnPoint = false;
+        float bestDistanceSqr = float.NegativeInfinity;
+        spawnPosition = Vector3.zero;
+
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                bool isStartCell = x == 0 && y == 0;
+                bool isEndCell = x == width - 1 && y == height - 1;
+                if (isStartCell || isEndCell)
+                    continue;
+
+                if (!TrySampleMazeNavMeshPosition(GetCellCenterWorldPosition(x, y), out Vector3 candidatePosition))
+                    continue;
+
+                float distanceSqr = GetFlatDistanceSqr(referencePosition, candidatePosition);
+                if (distanceSqr <= bestDistanceSqr)
+                    continue;
+
+                bestDistanceSqr = distanceSqr;
+                spawnPosition = candidatePosition;
+                foundSpawnPoint = true;
+            }
+        }
+
+        if (foundSpawnPoint)
+            return true;
+
+        return TrySampleMazeNavMeshPosition(GetCellCenterWorldPosition(width - 1, height - 1), out spawnPosition) ||
+               TrySampleMazeNavMeshPosition(GetCellCenterWorldPosition(0, 0), out spawnPosition);
+    }
+
+    bool TrySampleMazeNavMeshPosition(Vector3 candidateCenter, out Vector3 sampledPosition)
+    {
+        Vector3 sampleOrigin = candidateCenter + Vector3.up * Mathf.Max(1f, wallHeight * 0.5f);
+        float sampleDistance = Mathf.Max(cellSize * 1.5f, wallHeight + 1f);
+
+        if (NavMesh.SamplePosition(sampleOrigin, out NavMeshHit hit, sampleDistance, NavMesh.AllAreas))
+        {
+            sampledPosition = hit.position + Vector3.up * dollSpawnHeightOffset;
+            return true;
+        }
+
+        sampledPosition = Vector3.zero;
+        return false;
+    }
+
+    bool HasAnyValidMazeNavMeshPosition()
+    {
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                if (TrySampleMazeNavMeshPosition(GetCellCenterWorldPosition(x, y), out _))
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
+    void SetRoofObjectsActive(bool isActive)
+    {
+        for (int i = 0; i < generatedRoofObjects.Count; i++)
+        {
+            GameObject roofObject = generatedRoofObjects[i];
+            if (roofObject != null)
+                roofObject.SetActive(isActive);
+        }
+    }
+
+    Vector3 GetCellCenterWorldPosition(int x, int y)
+    {
+        return new Vector3(x * cellSize, 0f, y * cellSize);
+    }
+
+    float GetFlatDistanceSqr(Vector3 a, Vector3 b)
+    {
+        Vector2 flatA = new Vector2(a.x, a.z);
+        Vector2 flatB = new Vector2(b.x, b.z);
+        return (flatA - flatB).sqrMagnitude;
+    }
+
+    Transform ResolvePlayerTransform()
+    {
+        if (playerTransform != null)
+            return playerTransform;
+
+        GameObject playerObject = GameObject.FindGameObjectWithTag(playerTag);
+        if (playerObject != null)
+            playerTransform = playerObject.transform;
+
+        return playerTransform;
+    }
+
+    Camera ResolvePlayerCamera()
+    {
+        if (playerCamera == null)
+            playerCamera = Camera.main;
+
+        return playerCamera;
     }
 }
 

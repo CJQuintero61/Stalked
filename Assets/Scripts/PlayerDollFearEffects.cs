@@ -1,4 +1,3 @@
-using StarterAssets;
 using UnityEngine;
 
 [DefaultExecutionOrder(1000)]
@@ -7,33 +6,58 @@ public class PlayerDollFearEffects : MonoBehaviour
     [Header("References")]
     public Transform playerRoot;
     public Transform cameraTarget;
-    public FirstPersonController firstPersonController;
     public Transform pressureSource;
 
-    [Header("Pressure Effects")]
-    public float pressureSmoothing = 5f;
-    public float maxFovOffset = 5f;
-    public float swayPitch = 1.4f;
-    public float swayRoll = 2f;
-    public float yawPullSpeed = 18f;
-    [Range(0f, 1f)]
-    public float lookDampening = 0.35f;
+    [Header("Debug")]
+    public bool effectsEnabled = false;
 
-    [Header("Grab Effects")]
-    public float grabFovOffset = 10f;
-    public float grabPitchOffset = 8f;
-    public float grabYawPullSpeed = 110f;
+    [Header("General")]
+    public float presenceSmoothing = 2.5f;
+
+    [Header("Peek Effects")]
+    public float peekFovOffset = 0.4f;
+    public float peekPitch = 0.12f;
+    public float peekRoll = 0.18f;
+
+    [Header("Threat Effects")]
+    public float threatFovOffset = 1.25f;
+    public float threatPitch = 0.3f;
+    public float threatRoll = 0.45f;
+    public float threatYawPullSpeed = 0f;
+
+    [Header("Lunge Effects")]
+    public float lungeFovOffset = 2.4f;
+    public float lungePitch = 0.9f;
+    public float lungeRoll = 0.65f;
+    public float lungeYawPullSpeed = 0f;
+
+    [Header("Scare Effects")]
+    public float scareFovOffset = 3.6f;
+    public float scarePitchOffset = 1.6f;
+    public float scareRollOffset = 0.9f;
+    public float scareYawPullSpeed = 0f;
+
+    [Header("Flash Feedback")]
+    public float flashResponseDuration = 0.2f;
+    public float flashFovKick = -0.6f;
+    public float flashRollKick = 0.4f;
 
     private Camera cachedCamera;
     private float baseFieldOfView;
-    private float currentPressure;
-    private float desiredPressure;
-    private float grabTimer;
-    private float grabDuration;
-    private bool pressureTouchedThisFrame;
-    private bool controllerWasEnabled;
+    private float desiredPeek;
+    private float desiredThreat;
+    private float desiredLunge;
+    private float currentPeek;
+    private float currentThreat;
+    private float currentLunge;
+    private bool presenceTouchedThisFrame;
+    private float scareTimer;
+    private float scareDuration;
+    private float scareIntensity;
+    private float flashTimer;
     private Quaternion lastTargetOffset = Quaternion.identity;
     private Quaternion lastCameraRoll = Quaternion.identity;
+    private bool disabledCleanupApplied;
 
     void Awake()
     {
@@ -50,11 +74,6 @@ public class PlayerDollFearEffects : MonoBehaviour
         {
             playerRoot = transform.parent;
         }
-
-        if (firstPersonController == null && playerRoot != null)
-        {
-            firstPersonController = playerRoot.GetComponentInChildren<FirstPersonController>();
-        }
     }
 
     void OnDisable()
@@ -67,59 +86,138 @@ public class PlayerDollFearEffects : MonoBehaviour
         pressureSource = source;
     }
 
+    public void SetPeekPresence(float intensity)
+    {
+        if (!effectsEnabled)
+        {
+            return;
+        }
+
+        presenceTouchedThisFrame = true;
+        desiredPeek = Mathf.Max(desiredPeek, Mathf.Clamp01(intensity));
+    }
+
+    public void SetThreatPresence(float intensity)
+    {
+        if (!effectsEnabled)
+        {
+            return;
+        }
+
+        presenceTouchedThisFrame = true;
+        desiredThreat = Mathf.Max(desiredThreat, Mathf.Clamp01(intensity));
+    }
+
+    public void SetLungePresence(float intensity)
+    {
+        if (!effectsEnabled)
+        {
+            return;
+        }
+
+        presenceTouchedThisFrame = true;
+        desiredLunge = Mathf.Max(desiredLunge, Mathf.Clamp01(intensity));
+    }
+
+    public void ClearEncounterPresence()
+    {
+        if (!effectsEnabled)
+        {
+            return;
+        }
+
+        presenceTouchedThisFrame = true;
+        desiredPeek = 0f;
+        desiredThreat = 0f;
+        desiredLunge = 0f;
+    }
+
     public void SetDollPressure(float intensity)
     {
-        pressureTouchedThisFrame = true;
-        desiredPressure = Mathf.Max(desiredPressure, Mathf.Clamp01(intensity));
+        SetThreatPresence(intensity);
     }
 
     public void ClearDollPressure()
     {
-        pressureTouchedThisFrame = true;
-        desiredPressure = 0f;
+        ClearEncounterPresence();
+    }
+
+    public void PlayScareStagger(float duration, float intensity = 1f)
+    {
+        if (!effectsEnabled)
+        {
+            return;
+        }
+
+        scareDuration = Mathf.Max(0.05f, duration);
+        scareTimer = scareDuration;
+        scareIntensity = Mathf.Clamp01(intensity);
+        presenceTouchedThisFrame = true;
+    }
+
+    public void PlayFlashRepel()
+    {
+        if (!effectsEnabled)
+        {
+            return;
+        }
+
+        flashTimer = Mathf.Max(0.05f, flashResponseDuration);
+        presenceTouchedThisFrame = true;
     }
 
     public void PlayDollGrab(float duration)
     {
-        grabDuration = Mathf.Max(0.05f, duration);
-        grabTimer = grabDuration;
-        pressureTouchedThisFrame = true;
-        desiredPressure = 1f;
-
-        if (firstPersonController != null)
-        {
-            controllerWasEnabled = firstPersonController.enabled;
-            firstPersonController.enabled = false;
-        }
+        SetLungePresence(1f);
+        PlayScareStagger(duration, 1f);
     }
 
     void LateUpdate()
     {
-        if (grabTimer > 0f)
+        if (!effectsEnabled)
         {
-            grabTimer -= Time.deltaTime;
-            pressureTouchedThisFrame = true;
-            desiredPressure = 1f;
-
-            if (grabTimer <= 0f && firstPersonController != null)
+            if (!disabledCleanupApplied)
             {
-                firstPersonController.enabled = controllerWasEnabled;
+                RestoreDefaults();
+                disabledCleanupApplied = true;
             }
+            return;
         }
 
-        if (!pressureTouchedThisFrame)
+        disabledCleanupApplied = false;
+
+        if (scareTimer > 0f)
         {
-            desiredPressure = 0f;
+            scareTimer = Mathf.Max(0f, scareTimer - Time.deltaTime);
+            presenceTouchedThisFrame = true;
         }
 
-        currentPressure = Mathf.MoveTowards(currentPressure, desiredPressure, Time.deltaTime * pressureSmoothing);
+        if (flashTimer > 0f)
+        {
+            flashTimer = Mathf.Max(0f, flashTimer - Time.deltaTime);
+            presenceTouchedThisFrame = true;
+        }
+
+        if (!presenceTouchedThisFrame)
+        {
+            desiredPeek = 0f;
+            desiredThreat = 0f;
+            desiredLunge = 0f;
+        }
+
+        currentPeek = Mathf.MoveTowards(currentPeek, desiredPeek, Time.deltaTime * presenceSmoothing);
+        currentThreat = Mathf.MoveTowards(currentThreat, desiredThreat, Time.deltaTime * presenceSmoothing);
+        currentLunge = Mathf.MoveTowards(currentLunge, desiredLunge, Time.deltaTime * presenceSmoothing);
+
         ApplyEffects();
 
-        pressureTouchedThisFrame = false;
-        desiredPressure = Mathf.Clamp01(desiredPressure);
+        presenceTouchedThisFrame = false;
+        desiredPeek = Mathf.Clamp01(desiredPeek);
+        desiredThreat = Mathf.Clamp01(desiredThreat);
+        desiredLunge = Mathf.Clamp01(desiredLunge);
     }
 
-    private void ApplyEffects()
+    void ApplyEffects()
     {
         if (cameraTarget == null)
         {
@@ -129,12 +227,17 @@ public class PlayerDollFearEffects : MonoBehaviour
         cameraTarget.localRotation = cameraTarget.localRotation * Quaternion.Inverse(lastTargetOffset);
         transform.localRotation = transform.localRotation * Quaternion.Inverse(lastCameraRoll);
 
-        float grabStrength = grabDuration > 0f ? Mathf.Clamp01(grabTimer / grabDuration) : 0f;
-        float effectivePressure = Mathf.Max(currentPressure, grabStrength);
-        float time = Time.time * (1.5f + effectivePressure);
+        float scareStrength = scareDuration > 0f ? Mathf.Clamp01(scareTimer / scareDuration) * scareIntensity : 0f;
+        float flashStrength = flashResponseDuration > 0f ? Mathf.Clamp01(flashTimer / flashResponseDuration) : 0f;
+        float motionTime = Time.time * (1.2f + currentThreat + currentLunge + scareStrength);
 
-        float pitchOffset = Mathf.Sin(time * 2.1f) * swayPitch * currentPressure + grabPitchOffset * grabStrength;
-        float rollOffset = Mathf.Sin(time * 3.4f) * swayRoll * currentPressure;
+        float pitchOffset =
+            Mathf.Sin(motionTime * 1.8f) * (peekPitch * currentPeek + threatPitch * currentThreat + lungePitch * currentLunge) +
+            scarePitchOffset * scareStrength;
+        float rollOffset =
+            Mathf.Sin(motionTime * 2.7f) * (peekRoll * currentPeek + threatRoll * currentThreat + lungeRoll * currentLunge) +
+            scareRollOffset * scareStrength +
+            flashRollKick * flashStrength;
 
         lastTargetOffset = Quaternion.Euler(pitchOffset, 0f, 0f);
         lastCameraRoll = Quaternion.Euler(0f, 0f, rollOffset);
@@ -144,25 +247,22 @@ public class PlayerDollFearEffects : MonoBehaviour
 
         if (cachedCamera != null)
         {
-            float pulse = Mathf.Sin(time * 2.6f) * 0.5f * currentPressure;
-            cachedCamera.fieldOfView = baseFieldOfView + maxFovOffset * currentPressure + grabFovOffset * grabStrength + pulse;
+            float pulse = Mathf.Sin(motionTime * 2.1f) * 0.45f * (currentThreat + currentLunge + scareStrength);
+            cachedCamera.fieldOfView =
+                baseFieldOfView +
+                peekFovOffset * currentPeek +
+                threatFovOffset * currentThreat +
+                lungeFovOffset * currentLunge +
+                scareFovOffset * scareStrength +
+                flashFovKick * flashStrength +
+                pulse;
         }
 
-        if (playerRoot != null && pressureSource != null)
-        {
-            Vector3 toSource = pressureSource.position - playerRoot.position;
-            toSource.y = 0f;
-            if (toSource.sqrMagnitude > 0.001f)
-            {
-                Vector3 desiredForward = toSource.normalized;
-                float yawSpeed = Mathf.Lerp(yawPullSpeed * lookDampening, grabYawPullSpeed, grabStrength);
-                float maxRadiansDelta = Mathf.Deg2Rad * yawSpeed * Time.deltaTime * effectivePressure;
-                Vector3 rotated = Vector3.RotateTowards(playerRoot.forward, desiredForward, maxRadiansDelta, 0f);
-                playerRoot.rotation = Quaternion.LookRotation(rotated, Vector3.up);
-            }
-        }
-
-        if (currentPressure <= 0.001f && grabStrength <= 0.001f)
+        if (currentPeek <= 0.001f &&
+            currentThreat <= 0.001f &&
+            currentLunge <= 0.001f &&
+            scareStrength <= 0.001f &&
+            flashStrength <= 0.001f)
         {
             lastTargetOffset = Quaternion.identity;
             lastCameraRoll = Quaternion.identity;
@@ -174,12 +274,19 @@ public class PlayerDollFearEffects : MonoBehaviour
         }
     }
 
-    private void RestoreDefaults()
+    void RestoreDefaults()
     {
-        currentPressure = 0f;
-        desiredPressure = 0f;
-        grabTimer = 0f;
-        pressureTouchedThisFrame = false;
+        currentPeek = 0f;
+        currentThreat = 0f;
+        currentLunge = 0f;
+        desiredPeek = 0f;
+        desiredThreat = 0f;
+        desiredLunge = 0f;
+        scareTimer = 0f;
+        flashTimer = 0f;
+        scareIntensity = 0f;
+        presenceTouchedThisFrame = false;
+        disabledCleanupApplied = false;
 
         if (transform != null)
         {
@@ -197,11 +304,6 @@ public class PlayerDollFearEffects : MonoBehaviour
         if (cachedCamera != null)
         {
             cachedCamera.fieldOfView = baseFieldOfView;
-        }
-
-        if (firstPersonController != null)
-        {
-            firstPersonController.enabled = controllerWasEnabled || firstPersonController.enabled;
         }
     }
 }

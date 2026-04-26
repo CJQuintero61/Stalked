@@ -15,11 +15,17 @@ public class FlashlightController : MonoBehaviour
     public AudioClip soundOff;
 
     private bool isOn = false;
+    public bool IsFlashlightOn => hasFlashlight && isOn && flashlightLight != null && flashlightLight.activeInHierarchy;
+    public Transform BeamOrigin => flashlightLight != null ? flashlightLight.transform : transform;
 
     void Start()
     {
         // Make sure it's hidden when the game starts
         if(promptText != null) promptText.gameObject.SetActive(false);
+        if (flashlightLight != null)
+        {
+            flashlightLight.SetActive(false);
+        }
     }
 
     void Update()

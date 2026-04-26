@@ -1,23 +1,34 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using UnityEngine.SceneManagement;
+using System.Collections;
 
 public class PlayerHealth : MonoBehaviour
 {
     public int maxHealth = 100;
     public int currentHealth;
     public Vector2 healthBarOffset = new Vector2(0f, 24f);
+    public string deathSceneName = "GameOver";
+    public float deathSceneDelay = 1.25f;
 
     private GameObject createdHudObject;
     private Image healthFillImage;
     private int displayedHealth = int.MinValue;
+    private bool isDead;
+    private bool healthInitialized;
 
     public float HealthPercent => maxHealth <= 0 ? 0f : currentHealth / (float)maxHealth;
+    public bool IsDead => isDead;
+
+    void Awake()
+    {
+        InitializeHealth();
+    }
 
     void Start()
     {
-        maxHealth = Mathf.Max(1, maxHealth);
-        currentHealth = maxHealth;
+        InitializeHealth();
 
         CreateHealthBar();
         RefreshHealthBar();
@@ -39,7 +50,7 @@ public class PlayerHealth : MonoBehaviour
 
     public void TakeDamage(int amount)
     {
-        if (amount <= 0)
+        if (amount <= 0 || isDead)
         {
             return;
         }
@@ -206,7 +217,39 @@ public class PlayerHealth : MonoBehaviour
 
     void Die()
     {
+        if (isDead)
+        {
+            return;
+        }
+
+        isDead = true;
         Debug.Log("Player died.");
+        StartCoroutine(LoadDeathSceneAfterDelay());
+    }
+
+    void InitializeHealth()
+    {
+        if (healthInitialized)
+        {
+            return;
+        }
+
+        maxHealth = Mathf.Max(1, maxHealth);
+        currentHealth = currentHealth <= 0 ? maxHealth : Mathf.Clamp(currentHealth, 0, maxHealth);
+        healthInitialized = true;
+    }
+
+    IEnumerator LoadDeathSceneAfterDelay()
+    {
+        yield return new WaitForSeconds(Mathf.Max(0f, deathSceneDelay));
+
+        if (!string.IsNullOrWhiteSpace(deathSceneName))
+        {
+            SceneManager.LoadScene(deathSceneName);
+            yield break;
+        }
+
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
     void OnDestroy()
