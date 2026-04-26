@@ -390,17 +390,17 @@ public class MazeGenerator : MonoBehaviour
         }
 
         GameObject doll = Instantiate(dollEnemyPrefab, spawnPosition, spawnRotation, currentMazeParent.transform);
-        DollNightcrawlerFollower follower = doll.GetComponent<DollNightcrawlerFollower>();
+        SimpleDollAmbush follower = doll.GetComponent<SimpleDollAmbush>();
         if (follower == null)
-            follower = doll.GetComponentInChildren<DollNightcrawlerFollower>();
+            follower = doll.GetComponentInChildren<SimpleDollAmbush>();
 
         if (follower == null)
         {
-            Debug.LogWarning("The assigned doll enemy prefab does not contain a DollNightcrawlerFollower script.", doll);
+            Debug.LogWarning("The assigned doll enemy prefab does not contain a SimpleDollAmbush script.", doll);
             return;
         }
 
-        follower.playerTarget = resolvedPlayer;
+        follower.player = resolvedPlayer;
         follower.playerCamera = resolvedCamera;
     }
 

@@ -50,7 +50,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 5e089ae1c9732b8418eb03b7b373e87e, type: 3}
       propertyPath: m_Name
-      value: SKM_DemonDoll_Var1
+      value: DollEnemy
       objectReference: {fileID: 0}
     - target: {fileID: 5866666021909216657, guid: 5e089ae1c9732b8418eb03b7b373e87e, type: 3}
       propertyPath: m_Controller
@@ -109,27 +109,62 @@ MonoBehaviour:
   playerTarget: {fileID: 0}
   playerCamera: {fileID: 0}
   fearEffects: {fileID: 0}
+  encounterStatus: {fileID: 0}
+  flashlightController: {fileID: 0}
   eyePoint: {fileID: 0}
   audioSource: {fileID: 0}
   playerTag: Player
+  enableFearEffectsOnEncounter: 1
   stoppingDistance: 1.5
-  relocationRefreshRate: 0.75
-  relocateMinRadius: 3.5
-  relocateMaxRadius: 8.5
+  roamRefreshRate: 1.2
+  roamMinRadius: 3
+  roamMaxRadius: 9
   retreatMinRadius: 6.5
   retreatMaxRadius: 11
+  minimumRetreatDistanceFromPlayer: 4
+  initialPlacementSampleRadius: 3
   destinationSampleRadius: 2.5
   relocationSamples: 18
+  lungeSpeedMultiplier: 1.35
   directViewDot: 0.85
   blindSpotDot: 0.2
   maxSightDistance: 30
-  pressureDistance: 2.8
-  pressureAnchorDistance: 1.8
+  threatenDistance: 5
+  closeEncounterRange: 1.75
   peekDuration: 0.9
-  pressureBuildDuration: 1.4
-  grabDuration: 1.1
-  cooldownDuration: 2.5
-  pressureDestinationRefreshRate: 0.2
-  grabSnapDistance: 1.2
-  movingSpeedThreshold: 0.05
-  crawlAnimationSpeed: 1
+  threatenBuildDuration: 1.6
+  lungeTellDuration: 1
+  retreatDuration: 1.5
+  recoverDuration: 2.4
+  seenGraceDuration: 1.15
+  repeatAttackCooldown: 3.25
+  pressureAnchorRefreshRate: 0.25
+  followUpDamage: 34
+  vulnerabilityWindow: 7
+  firstHitScareDuration: 0.75
+  secondHitScareDuration: 1.15
+  lungeSnapDistance: 1.4
+  peekScareDuration: 0.3
+  peekScareIntensity: 0.35
+  lungeScareDuration: 0.85
+  lungeScareIntensity: 1
+  flashlightDotThreshold: 0.82
+  flashlightInterruptRange: 11
+  flashlightInterruptCooldown: 0.4
+  maxThreatPathLength: 7
+  maxLungePathLength: 4
+  maxRelocationPathLength: 13
+  hiddenSpotBonus: 2.5
+  cornerBonus: 1
+  junctionBonus: 1.15
+  deadEndBonus: 0.95
+  directVisibilityPenalty: 3
+  repeatSpotPenalty: 2
+  pathLengthPenalty: 0.18
+  featureProbeDistance: 1.75
+  peekCue: {fileID: 0}
+  threatenCue: {fileID: 0}
+  lungeCue: {fileID: 0}
+  flashlightRepelCue: {fileID: 0}
+  scareCue: {fileID: 0}
+  cueVolume: 0.8
