@@ -12,8 +12,6 @@ public class PlayerInteraction : MonoBehaviour
     public GameObject interactPanel; 
     public TextMeshProUGUI promptText; 
 
-    // REMOVED the local booleans from here. 
-    // They now live in GameManager.Instance.
     [Header("State")]
     public bool isInTriggerZone = false;
 
@@ -31,6 +29,9 @@ public class PlayerInteraction : MonoBehaviour
             DoorInteractable door = hit.collider.GetComponentInParent<DoorInteractable>();
             CellarInteractable cellar = hit.collider.GetComponentInParent<CellarInteractable>();
             ItemObject item = hit.collider.GetComponentInParent<ItemObject>();
+            
+            // NEW: Look for the Maze Exit
+            LeaveCornfield mazeExit = hit.collider.GetComponentInParent<LeaveCornfield>();
 
             if (door != null)
             {
@@ -50,13 +51,33 @@ public class PlayerInteraction : MonoBehaviour
                 
                 if (Keyboard.current.eKey.wasPressedThisFrame) 
                 {
-                    // CHANGED: Check the GameManager for the key, not the local variable
                     bool success = cellar.TryOpenCellar(GameManager.Instance.hasCellarKey);
                     if (success == false)
                     {
                         StartCoroutine(ShowTemporaryMessage("It's locked. Find a key.", 2f));
                         ObjectiveManager.Instance.UpdateObjective("Find Key to Cellar");
                     }
+                }
+            }
+            // NEW: Handle the Maze Exit logic
+            else if (mazeExit != null)
+            {
+                bool hasCliffard = GameManager.Instance != null && GameManager.Instance.hasCliffard;
+
+                // Update the UI based on whether they have Cliffard
+                if (hasCliffard)
+                {
+                    UpdateUI(true, "Press E to escape with Cliffard!");
+                }
+                else
+                {
+                    UpdateUI(true, "Press E to leave without Cliffard...");
+                }
+
+                // Trigger the escape when E is pressed
+                if (Keyboard.current.eKey.wasPressedThisFrame)
+                {
+                    mazeExit.EscapeMaze(hasCliffard);
                 }
             }
             else if (item != null)
@@ -129,10 +150,8 @@ public class PlayerInteraction : MonoBehaviour
         isShowingMessage = false; 
     }
 
-    // CHANGED: Added the ItemObject reference so we can register the pickup with the PersistentManager
     void HandlePickUp(string itemName, ItemObject itemRef)
     {
-        // 1. Update the boolean in the GameManager
         if (itemName == "Collar")
         {
             GameManager.Instance.hasCollar = true;
@@ -159,7 +178,6 @@ public class PlayerInteraction : MonoBehaviour
             }
         }
 
-        // 2. Tell the specific scene object to save its destroyed state
         PersistentSceneObject pso = itemRef.GetComponent<PersistentSceneObject>();
         if (pso != null)
         {

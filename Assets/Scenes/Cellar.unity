@@ -481,7 +481,6 @@ GameObject:
   - component: {fileID: 143079682}
   - component: {fileID: 143079681}
   - component: {fileID: 143079680}
-  - component: {fileID: 143079679}
   m_Layer: 0
   m_Name: GlobalAmbience
   m_TagString: Untagged
@@ -489,24 +488,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &143079679
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 143079678}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0e7f4596fe62e7d4695dd8247e2497cd, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: '::'
-  audioSource: {fileID: 0}
-  thunderClip: {fileID: 8300000, guid: 4878ddca79980c14d9f68003834f00a7, type: 3}
-  lightningLight: {fileID: 576299636}
-  flashDuration: 0.1
-  minInterval: 240
-  maxInterval: 420
 --- !u!82 &143079680
 AudioSource:
   m_ObjectHideFlags: 0
@@ -615,7 +596,7 @@ AudioSource:
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 0}
-  m_Resource: {fileID: 8300000, guid: 35b5515acac9e594b94cb22175cdde1a, type: 3}
+  m_Resource: {fileID: 8300000, guid: cebea57ec413ed84880ac29050d3928a, type: 3}
   m_PlayOnAwake: 1
   m_Volume: 1
   m_Pitch: 1
@@ -3961,7 +3942,7 @@ MonoBehaviour:
   torchPrefab: {fileID: 0}
   torchDensity: 0.1
   torchHeight: 1.2
-  showStartEndText: 1
+  showStartEndText: 0
   wallMaterial: {fileID: 2100000, guid: 56149e73cf105b84da0161625698b190, type: 2}
   pillarMaterial: {fileID: 2100000, guid: 50b0a1c32d52e4341aad7bf768ed2758, type: 2}
   floorMaterial: {fileID: 2100000, guid: 6e92dd84e2b91f144b66fac970ff7ce9, type: 2}
@@ -5498,6 +5479,10 @@ PrefabInstance:
     - target: {fileID: 7857710382964128023, guid: 30f527c8a53c68b4fa4d98e8f643ad37, type: 3}
       propertyPath: m_Name
       value: GameManager
+      objectReference: {fileID: 0}
+    - target: {fileID: 9156149936862363353, guid: 30f527c8a53c68b4fa4d98e8f643ad37, type: 3}
+      propertyPath: heavyRainObject
+      value: 
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

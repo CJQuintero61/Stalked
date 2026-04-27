@@ -11,9 +11,13 @@ public class ThunderManager : MonoBehaviour
     public Light lightningLight; // Assign your Directional or Point light here
     public float flashDuration = 0.1f;
 
-    [Header("Interval Settings (in Seconds)")]
+    [Header("Normal Interval Settings")]
     public float minInterval = 180f; // 3 minutes
     public float maxInterval = 600f; // 10 minutes
+
+    [Header("Storm Interval Settings (With Cliffard)")]
+    public float stormMinInterval = 10f; 
+    public float stormMaxInterval = 30f; 
 
     void Start()
     {
@@ -24,29 +28,81 @@ public class ThunderManager : MonoBehaviour
         if (lightningLight != null)
             lightningLight.enabled = false;
 
-        // Start the infinite loop
+        // Start the continuous checking loop
         StartCoroutine(ThunderRoutine());
     }
 
     IEnumerator ThunderRoutine()
     {
+        float timer = 0f;
+        float currentTargetWaitTime = GetNextInterval();
+        bool wasCliffardFound = CheckForCliffard();
+
         while (true)
         {
-            // 1. Wait for a random duration
-            float waitTime = Random.Range(minInterval, maxInterval);
-            yield return new WaitForSeconds(waitTime);
+            // Advance the timer by the time passed since the last frame
+            timer += Time.deltaTime;
 
-            // 2. Trigger the visual flash
-            if (lightningLight != null)
+            // Constantly check if Cliffard was JUST picked up
+            bool isCliffardFoundNow = CheckForCliffard();
+
+            if (isCliffardFoundNow && !wasCliffardFound)
             {
-                StartCoroutine(LightningFlash());
+                // The player just got Cliffard! 
+                wasCliffardFound = true;
+                
+                // Reset the timer and instantly switch to the shorter storm intervals
+                timer = 0f;
+                currentTargetWaitTime = Random.Range(stormMinInterval, stormMaxInterval);
+                
+                Debug.Log("Thunderstorm intensifying!");
             }
 
-            // 3. Small delay between light and sound (Realism!)
-            yield return new WaitForSeconds(Random.Range(0.1f, 0.5f));
+            // If our timer reaches the target wait time, trigger the thunder
+            if (timer >= currentTargetWaitTime)
+            {
+                // Trigger the visual flash
+                if (lightningLight != null)
+                {
+                    StartCoroutine(LightningFlash());
+                }
 
-            // 4. Play the sound
-            PlayThunder();
+                // Small delay between light and sound (Realism!)
+                yield return new WaitForSeconds(Random.Range(0.1f, 0.5f));
+
+                // Play the sound
+                PlayThunder();
+
+                // Reset the timer and pick a new wait time for the next strike
+                timer = 0f;
+                currentTargetWaitTime = GetNextInterval();
+            }
+
+            // Wait until the next frame before looping again
+            yield return null; 
+        }
+    }
+
+    private bool CheckForCliffard()
+    {
+        // Safely check the GameManager to see if Cliffard is secured
+        if (GameManager.Instance != null)
+        {
+            return GameManager.Instance.hasCliffard;
+        }
+        return false;
+    }
+
+    private float GetNextInterval()
+    {
+        // Decide which set of variables to use based on the current state
+        if (CheckForCliffard())
+        {
+            return Random.Range(stormMinInterval, stormMaxInterval);
+        }
+        else
+        {
+            return Random.Range(minInterval, maxInterval);
         }
     }
 
