@@ -17,7 +17,7 @@ RenderSettings:
   m_Fog: 1
   m_FogColor: {r: 0, g: 0, b: 0, a: 1}
   m_FogMode: 3
-  m_FogDensity: 0.358
+  m_FogDensity: 0.1
   m_LinearFogStart: 0
   m_LinearFogEnd: 300
   m_AmbientSkyColor: {r: 0, g: 0, b: 0, a: 1}
@@ -35,7 +35,7 @@ RenderSettings:
   m_DefaultReflectionMode: 0
   m_DefaultReflectionResolution: 128
   m_ReflectionBounces: 1
-  m_ReflectionIntensity: 1
+  m_ReflectionIntensity: 0.3
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
   m_UseRadianceAmbientProbe: 0
@@ -908,10 +908,10 @@ Light:
   serializedVersion: 12
   m_Type: 0
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Intensity: 40
-  m_Range: 20
-  m_SpotAngle: 53.270008
-  m_InnerSpotAngle: 45.072083
+  m_Intensity: 10
+  m_Range: 15
+  m_SpotAngle: 35
+  m_InnerSpotAngle: 30
   m_CookieSize2D: {x: 0.5, y: 0.5}
   m_Shadows:
     m_Type: 0
@@ -3929,8 +3929,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5039bccd5090f574b96943e796612422, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MazeGenerator
-  width: 15
-  height: 15
+  width: 11
+  height: 11
   cellSize: 4
   wallThickness: 0.2
   wallHeight: 4
@@ -6777,7 +6777,7 @@ Transform:
   m_GameObject: {fileID: 7802601609800043772}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 56.646, y: -0.0000001565694, z: 55.786}
+  m_LocalPosition: {x: 40.45, y: -0.0000001565694, z: 40}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:

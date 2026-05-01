@@ -7755,10 +7755,10 @@ Light:
   serializedVersion: 12
   m_Type: 0
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Intensity: 40
-  m_Range: 100
-  m_SpotAngle: 42.960007
-  m_InnerSpotAngle: 34.76208
+  m_Intensity: 10
+  m_Range: 15
+  m_SpotAngle: 35
+  m_InnerSpotAngle: 30
   m_CookieSize2D: {x: 0.5, y: 0.5}
   m_Shadows:
     m_Type: 0
@@ -30949,7 +30949,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
   hasCollar: 0
-  hasFlashlight: 1
+  hasFlashlight: 0
   hasCellarKey: 0
   hasCliffard: 0
 --- !u!33 &1558466330436841424
@@ -50434,7 +50434,7 @@ MonoBehaviour:
   decoyCount: 100
   spawnRadius: 225
   minDistanceFromPlayer: 35
-  minDistanceBetweenScarecrows: 28
+  minDistanceBetweenScarecrows: 30
   navMeshSampleDistance: 10
   groundRaycastHeight: 80
   groundMask:
@@ -50443,7 +50443,7 @@ MonoBehaviour:
   spawnHeightOffset: 0
   placementAttempts: 800
   randomizeYRotation: 1
-  avoidCorn: 1
+  avoidCorn: 0
   cornNameKeywords:
   - corn
   cornClearanceRadius: 5
