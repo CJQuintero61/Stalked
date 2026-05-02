@@ -35,6 +35,9 @@ public class SimpleDollAmbush : MonoBehaviour
     public AudioClip popOutSound;
     public AudioClip hitSound;
     public AudioClip runAwaySound;
+    public AudioClip giggleSound; 
+    public float giggleRange = 5f;
+    public float giggleCooldown = 3f;
 
     [Header("Timing")]
     public float timeBeforeFirstAttack = 4f;
@@ -75,6 +78,7 @@ public class SimpleDollAmbush : MonoBehaviour
     private DollState currentState;
     private float stateTimer;
     private float nextHitTime;
+    private float nextGiggleTime;
     private float nextFlashlightInterruptTime;
     private bool isTriggeringFallbackDeath;
 
@@ -172,6 +176,7 @@ public class SimpleDollAmbush : MonoBehaviour
         }
 
         TryDamagePlayer();
+        TryPlayGiggle();
 
         if (stateTimer <= 0f)
         {
@@ -297,6 +302,30 @@ public class SimpleDollAmbush : MonoBehaviour
             }
 
             PlaySound(hitSound);
+        }
+    }
+
+    void TryPlayGiggle()
+    {
+        if (giggleSound == null || Time.time < nextGiggleTime)
+        {
+            return;
+        }
+
+        float distance = Vector3.Distance(transform.position, player.position);
+
+        if (distance <= giggleRange)
+        {
+            nextGiggleTime = Time.time + giggleCooldown;
+            
+            // Randomize pitch slightly to keep it unsettling
+            float originalPitch = audioSource.pitch;
+            audioSource.pitch = Random.Range(0.85f, 1.15f);
+            
+            PlaySound(giggleSound);
+            
+            // Reset pitch after a short delay or on next play is usually fine with PlayOneShot
+            audioSource.pitch = originalPitch; 
         }
     }
 

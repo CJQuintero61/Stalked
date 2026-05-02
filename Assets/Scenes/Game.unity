@@ -1124,24 +1124,6 @@ MonoBehaviour:
   interactPanel: {fileID: 784870361}
   promptText: {fileID: 784870363}
   isInTriggerZone: 0
---- !u!114 &190200002
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 96029986}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5e6b7b0fdab44a2ea7e20ec25fd4d690, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerDollFearEffects
-  smallPulseDuration: 0.25
-  strongPulseDuration: 0.45
-  smallFovKick: 2
-  strongFovKick: 5
-  smallShakeAmount: 0.5
-  strongShakeAmount: 1.4
 --- !u!114 &96029989
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2071,6 +2053,24 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1091378685}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &190200002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 96029986}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5e6b7b0fdab44a2ea7e20ec25fd4d690, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerDollFearEffects
+  smallPulseDuration: 0.25
+  strongPulseDuration: 0.45
+  smallFovKick: 2
+  strongFovKick: 5
+  smallShakeAmount: 0.5
+  strongShakeAmount: 1.4
 --- !u!1 &199991341
 GameObject:
   m_ObjectHideFlags: 0
@@ -7519,6 +7519,8 @@ MonoBehaviour:
   maxHealth: 100
   currentHealth: 0
   healthBarOffset: {x: 0, y: 24}
+  deathSceneName: GameOver
+  deathSceneDelay: 1.25
   hurtSounds:
   - {fileID: 8300000, guid: 065aa1db265e7ef4cb752ef17e609a65, type: 3}
   - {fileID: 8300000, guid: 95743fee66c7c464cb2bb00d6892a50e, type: 3}
@@ -30967,7 +30969,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d94916a3922b45946aa24ddbdf76e7d3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
-  hasCollar: 1
+  hasCollar: 0
   hasFlashlight: 0
   hasCellarKey: 0
   hasCliffard: 0

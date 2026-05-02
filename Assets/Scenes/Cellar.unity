@@ -1456,6 +1456,7 @@ GameObject:
   - component: {fileID: 323413340}
   - component: {fileID: 323413339}
   - component: {fileID: 323413351}
+  - component: {fileID: 323413352}
   m_Layer: 8
   m_Name: PlayerBody
   m_TagString: Player
@@ -1962,6 +1963,30 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e28b5d046c01fe548bebc22eb7eb4fd6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MazePlayerRelay
+--- !u!114 &323413352
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 323413337}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dcdbc5181fc371c4094511bcd1e8dcec, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerHealth
+  maxHealth: 100
+  currentHealth: 0
+  healthBarOffset: {x: 0, y: 24}
+  deathSceneName: GameOver
+  deathSceneDelay: 1.25
+  hurtSounds: []
+  deathSound: {fileID: 0}
+  hurtVolume: 1
+  deathVolume: 1
+  damageVignette: {fileID: 0}
+  vignetteMaxAlpha: 0.6
+  vignetteFadeSpeed: 3
 --- !u!1 &330914752
 GameObject:
   m_ObjectHideFlags: 0

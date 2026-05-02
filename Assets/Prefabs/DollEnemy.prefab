@@ -66,6 +66,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 5e089ae1c9732b8418eb03b7b373e87e, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2681844157997612448}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 5e089ae1c9732b8418eb03b7b373e87e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -2801148151454351723}
   m_SourcePrefab: {fileID: 100100000, guid: 5e089ae1c9732b8418eb03b7b373e87e, type: 3}
 --- !u!1 &6832941109952149970 stripped
 GameObject:
@@ -106,65 +109,133 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4c802d71f815412cb7a6286ac2b76d5d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DollNightcrawlerFollower
-  playerTarget: {fileID: 0}
+  player: {fileID: 0}
   playerCamera: {fileID: 0}
-  fearEffects: {fileID: 0}
-  encounterStatus: {fileID: 0}
+  playerHealth: {fileID: 0}
+  fearEffect: {fileID: 0}
   flashlightController: {fileID: 0}
-  eyePoint: {fileID: 0}
-  audioSource: {fileID: 0}
-  playerTag: Player
+  audioSource: {fileID: -2801148151454351723}
   enableFearEffectsOnEncounter: 1
-  stoppingDistance: 1.5
-  roamRefreshRate: 1.2
-  roamMinRadius: 3
-  roamMaxRadius: 9
-  retreatMinRadius: 6.5
-  retreatMaxRadius: 11
-  minimumRetreatDistanceFromPlayer: 4
-  initialPlacementSampleRadius: 3
-  destinationSampleRadius: 2.5
-  relocationSamples: 18
-  lungeSpeedMultiplier: 1.35
-  directViewDot: 0.85
-  blindSpotDot: 0.2
-  maxSightDistance: 30
-  threatenDistance: 5
-  closeEncounterRange: 1.75
-  peekDuration: 0.9
-  threatenBuildDuration: 1.6
-  lungeTellDuration: 1
-  retreatDuration: 1.5
-  recoverDuration: 2.4
-  seenGraceDuration: 1.15
-  repeatAttackCooldown: 3.25
-  pressureAnchorRefreshRate: 0.25
-  followUpDamage: 34
-  vulnerabilityWindow: 7
-  firstHitScareDuration: 0.75
-  secondHitScareDuration: 1.15
-  lungeSnapDistance: 1.4
-  peekScareDuration: 0.3
-  peekScareIntensity: 0.35
-  lungeScareDuration: 0.85
-  lungeScareIntensity: 1
+  popOutSound: {fileID: 0}
+  hitSound: {fileID: 0}
+  runAwaySound: {fileID: 0}
+  giggleSound: {fileID: 8300000, guid: 38867100a2cc9a24789bac7145409cae, type: 3}
+  giggleRange: 10
+  giggleCooldown: 5
+  timeBeforeFirstAttack: 4
+  attackCooldown: 7
+  popOutTime: 1.2
+  chaseTime: 4
+  runAwayTime: 3
+  damage: 15
+  attackRange: 2.2
+  timeBetweenHits: 1.25
+  popOutDistance: 4
+  sideOffset: 1.5
+  chaseSpeed: 4
+  runAwaySpeed: 6
+  runAwayDistance: 10
+  hideWhenWaiting: 1
+  dollRenderers: []
   flashlightDotThreshold: 0.82
   flashlightInterruptRange: 11
   flashlightInterruptCooldown: 0.4
-  maxThreatPathLength: 7
-  maxLungePathLength: 4
-  maxRelocationPathLength: 13
-  hiddenSpotBonus: 2.5
-  cornerBonus: 1
-  junctionBonus: 1.15
-  deadEndBonus: 0.95
-  directVisibilityPenalty: 3
-  repeatSpotPenalty: 2
-  pathLengthPenalty: 0.18
-  featureProbeDistance: 1.75
-  peekCue: {fileID: 0}
-  threatenCue: {fileID: 0}
-  lungeCue: {fileID: 0}
-  flashlightRepelCue: {fileID: 0}
-  scareCue: {fileID: 0}
-  cueVolume: 0.8
+  fallbackDeathSceneName: GameOver
+  fallbackDeathDelay: 0.35
+--- !u!82 &-2801148151454351723
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6832941109952149970}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 0}
+  m_audioClip: {fileID: 0}
+  m_Resource: {fileID: 8300000, guid: 38867100a2cc9a24789bac7145409cae, type: 3}
+  m_PlayOnAwake: 1
+  m_Volume: 1
+  m_Pitch: 1
+  Loop: 0
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 1
+  MinDistance: 1
+  MaxDistance: 10
+  Pan2D: 0
+  rolloffMode: 0
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
