@@ -1079,6 +1079,7 @@ GameObject:
   - component: {fileID: 96029990}
   - component: {fileID: 96029989}
   - component: {fileID: 96029988}
+  - component: {fileID: 190200002}
   - component: {fileID: 96029993}
   - component: {fileID: 96029994}
   m_Layer: 0
@@ -1123,6 +1124,24 @@ MonoBehaviour:
   interactPanel: {fileID: 784870361}
   promptText: {fileID: 784870363}
   isInTriggerZone: 0
+--- !u!114 &190200002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 96029986}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5e6b7b0fdab44a2ea7e20ec25fd4d690, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerDollFearEffects
+  smallPulseDuration: 0.25
+  strongPulseDuration: 0.45
+  smallFovKick: 2
+  strongFovKick: 5
+  smallShakeAmount: 0.5
+  strongShakeAmount: 1.4
 --- !u!114 &96029989
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -7,7 +7,7 @@ public class FlashlightController : MonoBehaviour
     [Header("References")]
     public GameObject flashlightLight;
     public AudioSource audioSource;
-    public TextMeshProUGUI promptText; 
+    public TextMeshProUGUI promptText;
 
     // REMOVED: public bool hasFlashlight = false;
     // We no longer need this because the GameManager tracks it permanently!
@@ -17,21 +17,28 @@ public class FlashlightController : MonoBehaviour
     public AudioClip soundOff;
 
     private bool isOn = false;
+    public bool IsFlashlightOn =>
+        GameManager.Instance != null &&
+        GameManager.Instance.hasFlashlight &&
+        isOn &&
+        flashlightLight != null &&
+        flashlightLight.activeInHierarchy;
+    public Transform BeamOrigin => flashlightLight != null ? flashlightLight.transform : transform;
 
     void Start()
     {
         if(promptText != null) promptText.gameObject.SetActive(false);
-        
+
         // Ensure the AudioSource is assigned
         if (audioSource == null) audioSource = GetComponent<AudioSource>();
-        
+
         // Ensure the flashlight starts turned off when entering a new scene
         if (flashlightLight != null) flashlightLight.SetActive(false);
     }
 
     void Update()
     {
-        // UPDATED: Check the GameManager directly. 
+        // UPDATED: Check the GameManager directly.
         // Now, if you press 'F', it asks the persistent memory if you actually own the flashlight.
         if (GameManager.Instance != null && GameManager.Instance.hasFlashlight == true)
         {
@@ -51,7 +58,7 @@ public class FlashlightController : MonoBehaviour
     void ToggleFlashlight()
     {
         if(promptText != null) promptText.gameObject.SetActive(false);
-        
+
         isOn = !isOn;
         if (flashlightLight != null) flashlightLight.SetActive(isOn);
 
@@ -72,10 +79,10 @@ public class FlashlightController : MonoBehaviour
             {
                 // 3. Set the clip and play it fresh
                 audioSource.clip = clipToPlay;
-                
+
                 // Optional: Add a tiny pitch variation to make spamming less repetitive
                 audioSource.pitch = Random.Range(0.95f, 1.05f);
-                
+
                 audioSource.Play();
             }
         }
