@@ -329,6 +329,11 @@ public class PlayerHealth : MonoBehaviour
 
         if (!string.IsNullOrWhiteSpace(deathSceneName))
         {
+            if (deathSceneName == "GameOver")
+            {
+                DeathSceneState.Register(SceneManager.GetActiveScene().name);
+            }
+
             SceneManager.LoadScene(deathSceneName);
             yield break;
         }

@@ -1,5 +1,9 @@
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.SceneManagement;
+using UnityEngine.Serialization;
+using System.Collections;
+using NumericsVector3 = System.Numerics.Vector3;
 
 [RequireComponent(typeof(NavMeshAgent))]
 public class SimpleDollAmbush : MonoBehaviour
@@ -13,11 +17,19 @@ public class SimpleDollAmbush : MonoBehaviour
     }
 
     [Header("References")]
+    [FormerlySerializedAs("playerTarget")]
     public Transform player;
     public Camera playerCamera;
     public PlayerHealth playerHealth;
+    [FormerlySerializedAs("fearEffects")]
     public SimpleDollFearEffect fearEffect;
+    [FormerlySerializedAs("flashlightController")]
+    public FlashlightController flashlightController;
     public AudioSource audioSource;
+
+    [Header("Encounter")]
+    [FormerlySerializedAs("enableFearEffectsOnEncounter")]
+    public bool enableFearEffectsOnEncounter = true;
 
     [Header("Audio")]
     public AudioClip popOutSound;
@@ -47,10 +59,24 @@ public class SimpleDollAmbush : MonoBehaviour
     public bool hideWhenWaiting = true;
     public Renderer[] dollRenderers;
 
+    [Header("Flashlight")]
+    [FormerlySerializedAs("flashlightDotThreshold")]
+    public float flashlightDotThreshold = 0.82f;
+    [FormerlySerializedAs("flashlightInterruptRange")]
+    public float flashlightInterruptRange = 11f;
+    [FormerlySerializedAs("flashlightInterruptCooldown")]
+    public float flashlightInterruptCooldown = 0.4f;
+
+    [Header("Death Fallback")]
+    public string fallbackDeathSceneName = "GameOver";
+    public float fallbackDeathDelay = 0.35f;
+
     private NavMeshAgent agent;
     private DollState currentState;
     private float stateTimer;
     private float nextHitTime;
+    private float nextFlashlightInterruptTime;
+    private bool isTriggeringFallbackDeath;
 
     void Awake()
     {
@@ -104,6 +130,12 @@ public class SimpleDollAmbush : MonoBehaviour
 
     void UpdateHidden()
     {
+        if (ShouldHoldForStandaloneCellarTesting())
+        {
+            stateTimer = timeBeforeFirstAttack;
+            return;
+        }
+
         if (stateTimer <= 0f)
         {
             EnterPopOut();
@@ -112,6 +144,11 @@ public class SimpleDollAmbush : MonoBehaviour
 
     void UpdatePopOut()
     {
+        if (TryInterruptWithFlashlight())
+        {
+            return;
+        }
+
         LookAtPlayer();
 
         if (stateTimer <= 0f)
@@ -122,6 +159,11 @@ public class SimpleDollAmbush : MonoBehaviour
 
     void UpdateChasePlayer()
     {
+        if (TryInterruptWithFlashlight())
+        {
+            return;
+        }
+
         if (agent.isOnNavMesh)
         {
             agent.isStopped = false;
@@ -183,7 +225,7 @@ public class SimpleDollAmbush : MonoBehaviour
         SetDollVisible(true);
         LookAtPlayer();
 
-        if (fearEffect != null)
+        if (enableFearEffectsOnEncounter && fearEffect != null)
         {
             fearEffect.PlaySmallFearPulse();
         }
@@ -243,8 +285,13 @@ public class SimpleDollAmbush : MonoBehaviour
             {
                 playerHealth.TakeDamage(damage);
             }
+            else if (!isTriggeringFallbackDeath)
+            {
+                isTriggeringFallbackDeath = true;
+                StartCoroutine(LoadFallbackDeathSceneAfterDelay());
+            }
 
-            if (fearEffect != null)
+            if (enableFearEffectsOnEncounter && fearEffect != null)
             {
                 fearEffect.PlayFearPulse();
             }
@@ -354,6 +401,74 @@ public class SimpleDollAmbush : MonoBehaviour
         }
     }
 
+    bool TryInterruptWithFlashlight()
+    {
+        if (currentState == DollState.RunAway || Time.time < nextFlashlightInterruptTime)
+        {
+            return false;
+        }
+
+        if (!ShouldRetreatFromFlashlight())
+        {
+            return false;
+        }
+
+        nextFlashlightInterruptTime = Time.time + flashlightInterruptCooldown;
+        EnterRunAway();
+        return true;
+    }
+
+    bool ShouldRetreatFromFlashlight()
+    {
+        if (flashlightController == null)
+        {
+            return false;
+        }
+
+        Transform beamOrigin = flashlightController.BeamOrigin;
+        if (beamOrigin == null)
+        {
+            return false;
+        }
+
+        return FlashlightInterruptUtility.ShouldInterrupt(
+            flashlightController.IsFlashlightOn,
+            new NumericsVector3(beamOrigin.position.x, beamOrigin.position.y, beamOrigin.position.z),
+            new NumericsVector3(beamOrigin.forward.x, beamOrigin.forward.y, beamOrigin.forward.z),
+            new NumericsVector3(transform.position.x, transform.position.y, transform.position.z),
+            flashlightDotThreshold,
+            flashlightInterruptRange);
+    }
+
+    bool ShouldHoldForStandaloneCellarTesting()
+    {
+        if (GameManager.Instance == null)
+        {
+            return false;
+        }
+
+        return CellarDirectLaunchUtility.ShouldHoldDollUntilFlashlight(
+            SceneManager.GetActiveScene().name,
+            GameManager.Instance.hasCellarKey,
+            GameManager.Instance.hasFlashlight);
+    }
+
+    IEnumerator LoadFallbackDeathSceneAfterDelay()
+    {
+        yield return new WaitForSeconds(Mathf.Max(0f, fallbackDeathDelay));
+
+        string activeSceneName = SceneManager.GetActiveScene().name;
+        DeathSceneState.Register(activeSceneName);
+
+        if (!string.IsNullOrWhiteSpace(fallbackDeathSceneName))
+        {
+            SceneManager.LoadScene(fallbackDeathSceneName);
+            yield break;
+        }
+
+        SceneManager.LoadScene(activeSceneName);
+    }
+
     void ResolveReferences()
     {
         if (player == null)
@@ -384,6 +499,11 @@ public class SimpleDollAmbush : MonoBehaviour
         if (fearEffect == null && playerCamera != null)
         {
             fearEffect = playerCamera.GetComponent<SimpleDollFearEffect>();
+        }
+
+        if (flashlightController == null && playerCamera != null)
+        {
+            flashlightController = playerCamera.GetComponent<FlashlightController>();
         }
     }
 }

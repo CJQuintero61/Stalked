@@ -3,6 +3,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using TMPro;
 
 public class GameOverMenu : MonoBehaviour
 {
@@ -10,10 +11,15 @@ public class GameOverMenu : MonoBehaviour
     public string mainMenuSceneName = "MainMenu";
     public bool buildDefaultUiOnStart = true;
 
+    private DeathSceneInfo deathSceneInfo;
+
     void Start()
     {
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
+
+        deathSceneInfo = DeathSceneState.GetOrDefault(retrySceneName);
+        retrySceneName = deathSceneInfo.RetrySceneName;
 
         EnsureEventSystem();
 
@@ -23,20 +29,18 @@ public class GameOverMenu : MonoBehaviour
         }
     }
 
-    public void RetryCellar()
+    public void Restart()
     {
-        SceneManager.LoadScene(retrySceneName);
-    }
+        string activeSceneName = SceneManager.GetActiveScene().name;
+        string restartSceneName = DeathSceneActionUtility.ResolveRestartSceneName(activeSceneName, retrySceneName);
 
-    public void ReturnToMainMenu()
-    {
-        SceneManager.LoadScene(mainMenuSceneName);
+        DeathSceneActionUtility.PrepareForRestart();
+        SceneManager.LoadScene(restartSceneName);
     }
 
     public void QuitGame()
     {
-        Application.Quit();
-        Debug.Log("Player quit from Game Over.");
+        DeathSceneActionUtility.QuitGame();
     }
 
     void EnsureEventSystem()
@@ -54,12 +58,6 @@ public class GameOverMenu : MonoBehaviour
 
     void BuildDefaultUi()
     {
-        Font uiFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        if (uiFont == null)
-        {
-            uiFont = Resources.GetBuiltinResource<Font>("Arial.ttf");
-        }
-
         GameObject canvasObject = new GameObject("GameOverCanvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
         Canvas canvas = canvasObject.GetComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
@@ -70,30 +68,32 @@ public class GameOverMenu : MonoBehaviour
         scaler.matchWidthOrHeight = 0.5f;
 
         RectTransform canvasRect = canvasObject.GetComponent<RectTransform>();
+        TMP_FontAsset tmpFont = TMP_Settings.defaultFontAsset;
 
-        GameObject background = CreateImage("Background", canvasRect, new Color(0.015f, 0.01f, 0.008f, 1f));
+        GameObject background = CreateImage("Background", canvasRect, Color.black);
         StretchToFill(background.GetComponent<RectTransform>());
 
-        GameObject panel = CreateImage("Panel", canvasRect, new Color(0.09f, 0.015f, 0.012f, 0.92f));
-        RectTransform panelRect = panel.GetComponent<RectTransform>();
-        panelRect.anchorMin = new Vector2(0.5f, 0.5f);
-        panelRect.anchorMax = new Vector2(0.5f, 0.5f);
-        panelRect.pivot = new Vector2(0.5f, 0.5f);
-        panelRect.sizeDelta = new Vector2(720f, 460f);
-        panelRect.anchoredPosition = Vector2.zero;
-
-        Text title = CreateText("Title", panelRect, "GAME OVER", uiFont, 82, Color.white);
+        TextMeshProUGUI title = CreateText("YouDiedText", canvasRect, deathSceneInfo.PanelTitle, tmpFont, 64f, new Color(0.5849056f, 0f, 0f, 1f));
         RectTransform titleRect = title.GetComponent<RectTransform>();
-        titleRect.anchoredPosition = new Vector2(0f, 130f);
-        titleRect.sizeDelta = new Vector2(640f, 110f);
+        titleRect.anchorMin = new Vector2(0.5f, 0.5f);
+        titleRect.anchorMax = new Vector2(0.5f, 0.5f);
+        titleRect.pivot = new Vector2(0.5f, 0.5f);
+        titleRect.anchoredPosition = new Vector2(0f, 129f);
+        titleRect.sizeDelta = new Vector2(600f, 100f);
 
-        Text subtitle = CreateText("Subtitle", panelRect, "The doll found you in the cellar.", uiFont, 32, new Color(0.95f, 0.74f, 0.65f, 1f));
-        RectTransform subtitleRect = subtitle.GetComponent<RectTransform>();
-        subtitleRect.anchoredPosition = new Vector2(0f, 55f);
-        subtitleRect.sizeDelta = new Vector2(640f, 60f);
+        if (!string.IsNullOrWhiteSpace(deathSceneInfo.Subtitle))
+        {
+            TextMeshProUGUI subtitle = CreateText("Subtitle", canvasRect, deathSceneInfo.Subtitle, tmpFont, 32f, new Color(0.95f, 0.74f, 0.65f, 1f));
+            RectTransform subtitleRect = subtitle.GetComponent<RectTransform>();
+            subtitleRect.anchorMin = new Vector2(0.5f, 0.5f);
+            subtitleRect.anchorMax = new Vector2(0.5f, 0.5f);
+            subtitleRect.pivot = new Vector2(0.5f, 0.5f);
+            subtitleRect.anchoredPosition = new Vector2(0f, 55f);
+            subtitleRect.sizeDelta = new Vector2(640f, 60f);
+        }
 
-        CreateButton("RetryButton", panelRect, "Retry Cellar", uiFont, new Vector2(0f, -40f), RetryCellar);
-        CreateButton("MainMenuButton", panelRect, "Main Menu", uiFont, new Vector2(0f, -125f), ReturnToMainMenu);
+        CreateButton("RestartButton", canvasRect, deathSceneInfo.RetryButtonLabel, tmpFont, new Vector2(0f, -60f), Restart);
+        CreateButton("QuitButton", canvasRect, deathSceneInfo.QuitButtonLabel, tmpFont, new Vector2(0f, -135f), QuitGame);
     }
 
     GameObject CreateImage(string objectName, Transform parent, Color color)
@@ -107,23 +107,26 @@ public class GameOverMenu : MonoBehaviour
         return imageObject;
     }
 
-    Text CreateText(string objectName, Transform parent, string message, Font font, int fontSize, Color color)
+    TextMeshProUGUI CreateText(string objectName, Transform parent, string message, TMP_FontAsset font, float fontSize, Color color)
     {
-        GameObject textObject = new GameObject(objectName, typeof(RectTransform), typeof(Text));
+        GameObject textObject = new GameObject(objectName, typeof(RectTransform), typeof(TextMeshProUGUI));
         textObject.transform.SetParent(parent, false);
 
-        Text text = textObject.GetComponent<Text>();
+        TextMeshProUGUI text = textObject.GetComponent<TextMeshProUGUI>();
         text.text = message;
-        text.font = font;
+        if (font != null)
+        {
+            text.font = font;
+        }
         text.fontSize = fontSize;
-        text.fontStyle = FontStyle.Bold;
+        text.fontStyle = FontStyles.Bold;
         text.color = color;
-        text.alignment = TextAnchor.MiddleCenter;
+        text.alignment = TextAlignmentOptions.Center;
 
         return text;
     }
 
-    void CreateButton(string objectName, Transform parent, string label, Font font, Vector2 anchoredPosition, UnityEngine.Events.UnityAction action)
+    void CreateButton(string objectName, Transform parent, string label, TMP_FontAsset font, Vector2 anchoredPosition, UnityEngine.Events.UnityAction action)
     {
         GameObject buttonObject = new GameObject(objectName, typeof(RectTransform), typeof(Image), typeof(Button));
         buttonObject.transform.SetParent(parent, false);
@@ -132,17 +135,17 @@ public class GameOverMenu : MonoBehaviour
         buttonRect.anchorMin = new Vector2(0.5f, 0.5f);
         buttonRect.anchorMax = new Vector2(0.5f, 0.5f);
         buttonRect.pivot = new Vector2(0.5f, 0.5f);
-        buttonRect.sizeDelta = new Vector2(360f, 62f);
+        buttonRect.sizeDelta = new Vector2(300f, 75f);
         buttonRect.anchoredPosition = anchoredPosition;
 
         Image image = buttonObject.GetComponent<Image>();
-        image.color = new Color(0.72f, 0.08f, 0.05f, 1f);
+        image.color = new Color(0f, 0f, 0f, 0f);
 
         Button button = buttonObject.GetComponent<Button>();
         button.targetGraphic = image;
         button.onClick.AddListener(action);
 
-        Text buttonText = CreateText("Text", buttonRect, label, font, 28, Color.white);
+        TextMeshProUGUI buttonText = CreateText(objectName + "Text", buttonRect, label, font, 48f, new Color(0.58431375f, 0f, 0f, 1f));
         StretchToFill(buttonText.GetComponent<RectTransform>());
     }
 
