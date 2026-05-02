@@ -1968,7 +1968,7 @@ NavMeshAgent:
   m_Enabled: 1
   m_AgentTypeID: 0
   m_Radius: 0.5
-  m_Speed: 3.5
+  m_Speed: 8
   m_Acceleration: 20
   avoidancePriority: 50
   m_AngularSpeed: 720
@@ -2017,7 +2017,7 @@ MonoBehaviour:
   attackTurnSpeed: 540
   footstepSounds:
   - {fileID: 8300000, guid: 1f2844efbf7abf647ba3d75d510f823a, type: 3}
-  stepDistance: 1.2
+  stepDistance: 2.75
   footstepVolume: 25
   footstepPitch: 0.95
   footstepPitchVariance: 0.08

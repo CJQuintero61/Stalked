@@ -37,7 +37,7 @@ public class ScarecrowEnemy : MonoBehaviour, IDamageDealer
 
     [Header("Footsteps")]
     public AudioClip[] footstepSounds;
-    public float stepDistance = 4f;
+    public float stepDistance = 3.5f;
     public float footstepVolume = 0.1f;
     public float footstepPitch = 0.95f;
     public float footstepPitchVariance = 0.08f;

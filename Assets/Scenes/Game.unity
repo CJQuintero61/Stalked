@@ -30948,7 +30948,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d94916a3922b45946aa24ddbdf76e7d3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
-  hasCollar: 0
+  hasCollar: 1
   hasFlashlight: 0
   hasCellarKey: 0
   hasCliffard: 0
