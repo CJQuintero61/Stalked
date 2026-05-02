@@ -1,8 +1,9 @@
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.Events;
 using TMPro;
 using System;
+using System.Collections;
+using UnityEngine.SceneManagement;
 
 public class PlayerHealth : MonoBehaviour
 {
@@ -10,14 +11,18 @@ public class PlayerHealth : MonoBehaviour
     public int currentHealth;
 
     public Vector2 healthBarOffset = new Vector2(0f, 24f);
+    public string deathSceneName = "GameOver";
+    public float deathSceneDelay = 1.25f;
 
     private GameObject createdHudObject;
     private Image healthFillImage;
     private int displayedHealth = int.MinValue;
-    private bool isDead = false;
+    private bool isDead;
+    private bool healthInitialized;
 
     // calculate health percent
     public float HealthPercent => maxHealth <= 0 ? 0f : currentHealth / (float)maxHealth;
+    public bool IsDead => isDead;
     public event Action<Transform> OnDeath;
 
     // audio for taking damage and dying
@@ -35,10 +40,14 @@ public class PlayerHealth : MonoBehaviour
     public float vignetteFadeSpeed = 3f;
     private float vignetteAlpha = 0f;
 
+    void Awake()
+    {
+        InitializeHealth();
+    }
+
     void Start()
     {
-        maxHealth = Mathf.Max(1, maxHealth);
-        currentHealth = maxHealth;
+        InitializeHealth();
 
         CreateHealthBar();
         RefreshHealthBar();
@@ -267,6 +276,11 @@ public class PlayerHealth : MonoBehaviour
 
         PlayDeathSound();
         OnDeath?.Invoke(dealer?.DamageSourceTransform);
+
+        if (OnDeath == null)
+        {
+            StartCoroutine(LoadDeathSceneAfterDelay());
+        }
     }
 
     void OnDestroy()
@@ -295,5 +309,35 @@ public class PlayerHealth : MonoBehaviour
     {
         vignetteAlpha = vignetteMaxAlpha;
         SetVignetteAlpha(vignetteAlpha);
+    }
+
+    void InitializeHealth()
+    {
+        if (healthInitialized)
+        {
+            return;
+        }
+
+        maxHealth = Mathf.Max(1, maxHealth);
+        currentHealth = currentHealth <= 0 ? maxHealth : Mathf.Clamp(currentHealth, 0, maxHealth);
+        healthInitialized = true;
+    }
+
+    IEnumerator LoadDeathSceneAfterDelay()
+    {
+        yield return new WaitForSeconds(Mathf.Max(0f, deathSceneDelay));
+
+        if (!string.IsNullOrWhiteSpace(deathSceneName))
+        {
+            if (deathSceneName == "GameOver")
+            {
+                DeathSceneState.Register(SceneManager.GetActiveScene().name);
+            }
+
+            SceneManager.LoadScene(deathSceneName);
+            yield break;
+        }
+
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 }
