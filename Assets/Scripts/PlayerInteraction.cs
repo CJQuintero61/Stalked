@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 using TMPro;
+using System.Collections;
 
 public class PlayerInteraction : MonoBehaviour
 {
@@ -8,28 +9,29 @@ public class PlayerInteraction : MonoBehaviour
     public LayerMask interactLayer;
     
     [Header("UI Settings")]
-    public GameObject interactPanel; // The "Press E" UI container
-    public TextMeshProUGUI promptText; // The text component inside the container
+    public GameObject interactPanel; 
+    public TextMeshProUGUI promptText; 
 
-    [Header("Booleans")]
-    public bool hasCollar = false;
-    public bool hasFlashlight = false;
+    [Header("State")]
+    public bool isInTriggerZone = false;
+
+    private bool isShowingMessage = false;
 
     void Update()
     {
-        // Shoot ray from center of screen (First Person)
+        if (isShowingMessage == true) return; 
+
         Ray ray = Camera.main.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
         RaycastHit hit;
 
         if (Physics.Raycast(ray, out hit, interactDistance, interactLayer))
         {
-            // 1. Check for standard interactables
             DoorInteractable door = hit.collider.GetComponentInParent<DoorInteractable>();
             CellarInteractable cellar = hit.collider.GetComponentInParent<CellarInteractable>();
-            
-            // 2. Check for the items you want to "Pick Up"
-            // We use a simple tag or script name to identify the item
             ItemObject item = hit.collider.GetComponentInParent<ItemObject>();
+            
+            // NEW: Look for the Maze Exit
+            LeaveCornfield mazeExit = hit.collider.GetComponentInParent<LeaveCornfield>();
 
             if (door != null)
             {
@@ -38,53 +40,155 @@ public class PlayerInteraction : MonoBehaviour
             }
             else if (cellar != null)
             {
-                UpdateUI(true, "Press [E] to enter cellar");
-                if (Keyboard.current.eKey.wasPressedThisFrame) cellar.OpenCellar();
+                if (cellar.isLocked == true)
+                {
+                    UpdateUI(true, "Press [E] to open cellar");
+                }
+                else
+                {
+                    UpdateUI(true, "Press [E] to enter cellar");
+                }
+                
+                if (Keyboard.current.eKey.wasPressedThisFrame) 
+                {
+                    bool success = cellar.TryOpenCellar(GameManager.Instance.hasCellarKey);
+                    if (success == false)
+                    {
+                        StartCoroutine(ShowTemporaryMessage("It's locked. Find a key.", 2f));
+                        ObjectiveManager.Instance.UpdateObjective("Find Key to Cellar");
+                    }
+                }
+            }
+            // NEW: Handle the Maze Exit logic
+            else if (mazeExit != null)
+            {
+                bool hasCliffard = GameManager.Instance != null && GameManager.Instance.hasCliffard;
+
+                // Update the UI based on whether they have Cliffard
+                if (hasCliffard)
+                {
+                    UpdateUI(true, "Press E to escape with Cliffard!");
+                }
+                else
+                {
+                    UpdateUI(true, "Press E to leave without Cliffard...");
+                }
+
+                // Trigger the escape when E is pressed
+                if (Keyboard.current.eKey.wasPressedThisFrame)
+                {
+                    mazeExit.EscapeMaze(hasCliffard);
+                }
             }
             else if (item != null)
             {
-                UpdateUI(true, "Press [E] to pick up " + item.itemName);
-                
-                if (Keyboard.current.eKey.wasPressedThisFrame)
+                bool isEarlyCellarKey = item.itemName == "Cellar Key" && 
+                                       (ObjectiveManager.Instance == null || 
+                                        ObjectiveManager.Instance.objectiveText.text != "Find Key to Cellar");
+
+                if (isEarlyCellarKey == true)
                 {
-                    HandlePickUp(item.itemName);
-                    Destroy(item.gameObject); // Deletes the item from the scene
-                    UpdateUI(false, "");
+                    if (isInTriggerZone == false)
+                    {
+                        UpdateUI(false, "");
+                    }
+                }
+                else
+                {
+                    UpdateUI(true, "Press [E] to pick up " + item.itemName);
+                    
+                    if (Keyboard.current.eKey.wasPressedThisFrame)
+                    {
+                        HandlePickUp(item.itemName, item);
+
+                        if (item.itemAudioSource != null)
+                        {
+                            item.itemAudioSource.Play();
+
+                            Renderer[] renderers = item.GetComponentsInChildren<Renderer>();
+                            foreach (Renderer r in renderers) r.enabled = false;
+
+                            Collider[] colliders = item.GetComponentsInChildren<Collider>();
+                            foreach (Collider c in colliders) c.enabled = false;
+
+                            Destroy(item.gameObject, item.itemAudioSource.clip.length);
+                        }
+                        else
+                        {
+                            Destroy(item.gameObject);
+                        }
+
+                        if (isInTriggerZone == false)
+                        {
+                            UpdateUI(false, "");
+                        }
+                    }
                 }
             }
             else
             {
-                UpdateUI(false, "");
+                if (isInTriggerZone == false)
+                {
+                    UpdateUI(false, "");
+                }
             }
         }
         else
         {
-            UpdateUI(false, "");
+            if (isInTriggerZone == false)
+            {
+                UpdateUI(false, "");
+            }
         }
     }
 
-    // This is where your booleans live
-void HandlePickUp(string itemName)
-{
-    if (itemName == "Collar")
+    IEnumerator ShowTemporaryMessage(string message, float duration)
     {
-        hasCollar = true;
+        isShowingMessage = true; 
+        UpdateUI(true, message); 
+        yield return new WaitForSeconds(duration); 
+        isShowingMessage = false; 
     }
-    else if (itemName == "Flashlight")
-    {
-        hasFlashlight = true;
 
-        // NEW: Tell the FlashlightController script that we found it!
-        FlashlightController fc = GetComponent<FlashlightController>();
-    if (fc != null)
+    void HandlePickUp(string itemName, ItemObject itemRef)
     {
-        // This flips the bool AND shows the UI text at the same time
-        fc.EnableFlashlight(); 
+        if (itemName == "Collar")
+        {
+            GameManager.Instance.hasCollar = true;
+        }
+        else if(itemName == "Cellar Key")
+        {
+            GameManager.Instance.hasCellarKey = true;
+            ObjectiveManager.Instance.UpdateObjective("Head Back to the Cellar");
+        }
+        else if(itemName == "Cliffard")
+        {
+            GameManager.Instance.hasCliffard = true;
+            ObjectiveManager.Instance.UpdateObjective("Leave the Cellar");
+        }
+        else if (itemName == "Flashlight")
+        {
+            GameManager.Instance.hasFlashlight = true;
+            ObjectiveManager.Instance.UpdateObjective("Find Cliffard");
+
+            FlashlightController fc = GetComponent<FlashlightController>();
+            if (fc != null)
+            {
+                fc.EnableFlashlight(); 
+            }
+        }
+
+        PersistentSceneObject pso = itemRef.GetComponent<PersistentSceneObject>();
+        if (pso != null)
+        {
+            pso.RegisterPickup();
+        }
+        else
+        {
+            Debug.LogWarning($"Item {itemName} is missing a PersistentSceneObject script!");
+        }
     }
-    }
-}
     
-
     void UpdateUI(bool state, string message)
     {
         if (interactPanel != null) interactPanel.SetActive(state);
