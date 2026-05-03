@@ -67,6 +67,6 @@
         "*.sln": "*.csproj",
         "*.slnx": "*.csproj"
     },
-    "dotnet.defaultSolution": "Version Control - Stalked.slnx",
+    "dotnet.defaultSolution": "Stalked.slnx",
     "dotnet.enableWorkspaceBasedDevelopment": false
 }

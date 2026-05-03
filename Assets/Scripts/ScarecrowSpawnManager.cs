@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.SceneManagement;
 
 public class ScarecrowSpawnManager : MonoBehaviour
 {
@@ -39,6 +40,7 @@ public class ScarecrowSpawnManager : MonoBehaviour
     private readonly List<TerrainCornDetailLayer> cornDetailLayers = new List<TerrainCornDetailLayer>();
     private readonly List<Vector3> cornTerrainTreePositions = new List<Vector3>();
     private ScarecrowEnemy spawnedEnemy;
+    private bool hasTriggeredEvilMode;
 
     private struct TerrainCornDetailLayer
     {
@@ -51,6 +53,12 @@ public class ScarecrowSpawnManager : MonoBehaviour
         ResolveReferences();
         CacheCornAvoidanceSources();
         SpawnScarecrows();
+    }
+
+    void Update()
+    {
+        if (!hasTriggeredEvilMode && ShouldUseEvilScarecrows())
+            ConvertDecoysToEnemies();
     }
 
     public void SpawnScarecrows()
@@ -68,6 +76,14 @@ public class ScarecrowSpawnManager : MonoBehaviour
         }
 
         List<Vector3> spawnPositions = GenerateSpawnPositions();
+
+        if (ShouldUseEvilScarecrows())
+        {
+            SpawnAllEnemies(spawnPositions);
+            hasTriggeredEvilMode = true;
+            return;
+        }
+
         foreach (Vector3 position in spawnPositions)
         {
             Quaternion rotation = GetSpawnRotation();
@@ -102,6 +118,73 @@ public class ScarecrowSpawnManager : MonoBehaviour
         spawnedEnemy.playerCamera = playerCamera;
         spawnedEnemy.ConfigureSwitchingTargets(spawnedDecoys, player, playerCamera);
         spawnedEnemy.MoveIntoDecoy(startingDecoy);
+    }
+
+    void SpawnAllEnemies(List<Vector3> spawnPositions)
+    {
+        foreach (Vector3 position in spawnPositions)
+        {
+            Quaternion rotation = GetSpawnRotation();
+            GameObject enemyObject = Instantiate(
+                scarecrowEnemyPrefab,
+                position,
+                rotation,
+                spawnedParent);
+
+            PrepareEnemy(enemyObject);
+        }
+    }
+
+    void ConvertDecoysToEnemies()
+    {
+        hasTriggeredEvilMode = true;
+
+        if (spawnedEnemy != null)
+            spawnedEnemy.enableScarecrowSwitching = false;
+
+        foreach (GameObject decoy in spawnedDecoys)
+        {
+            if (decoy == null)
+                continue;
+
+            GameObject enemyObject = Instantiate(
+                scarecrowEnemyPrefab,
+                decoy.transform.position,
+                decoy.transform.rotation,
+                spawnedParent);
+
+            PrepareEnemy(enemyObject);
+            Destroy(decoy);
+        }
+
+        spawnedDecoys.Clear();
+    }
+
+    void PrepareEnemy(GameObject enemyObject)
+    {
+        if (enemyObject == null)
+            return;
+
+        ScarecrowEnemy scarecrowEnemy = enemyObject.GetComponent<ScarecrowEnemy>();
+        if (scarecrowEnemy == null)
+            scarecrowEnemy = enemyObject.GetComponentInChildren<ScarecrowEnemy>();
+
+        if (scarecrowEnemy == null)
+        {
+            Debug.LogWarning("The enemy prefab does not contain a ScarecrowEnemy script.", this);
+            return;
+        }
+
+        scarecrowEnemy.player = player;
+        scarecrowEnemy.playerCamera = playerCamera;
+        scarecrowEnemy.enableScarecrowSwitching = false;
+    }
+
+    bool ShouldUseEvilScarecrows()
+    {
+        return GameManager.Instance != null &&
+               GameManager.Instance.hasCliffard &&
+               SceneManager.GetActiveScene().name == "Game";
     }
 
     List<Vector3> GenerateSpawnPositions()
