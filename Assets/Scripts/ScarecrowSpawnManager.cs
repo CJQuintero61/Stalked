@@ -17,6 +17,8 @@ public class ScarecrowSpawnManager : MonoBehaviour
 
     [Header("Spawn Area")]
     public int decoyCount = 14;
+    [Tooltip("The number of decoys that will transform into real enemies when Evil Mode triggers.")]
+    public int conversionCount = 5; 
     public float spawnRadius = 85f;
     public float minDistanceFromPlayer = 14f;
     public float minDistanceBetweenScarecrows = 9f;
@@ -57,6 +59,7 @@ public class ScarecrowSpawnManager : MonoBehaviour
 
     void Update()
     {
+        // Check for the "Evil Mode" trigger condition defined in ShouldUseEvilScarecrows
         if (!hasTriggeredEvilMode && ShouldUseEvilScarecrows())
             ConvertDecoysToEnemies();
     }
@@ -77,6 +80,7 @@ public class ScarecrowSpawnManager : MonoBehaviour
 
         List<Vector3> spawnPositions = GenerateSpawnPositions();
 
+        // If starting the scene already in "Evil Mode"
         if (ShouldUseEvilScarecrows())
         {
             SpawnAllEnemies(spawnPositions);
@@ -84,6 +88,7 @@ public class ScarecrowSpawnManager : MonoBehaviour
             return;
         }
 
+        // Standard Spawn: Create Decoys
         foreach (Vector3 position in spawnPositions)
         {
             Quaternion rotation = GetSpawnRotation();
@@ -97,6 +102,7 @@ public class ScarecrowSpawnManager : MonoBehaviour
             return;
         }
 
+        // Spawn the initial "Real" scarecrow that hides inside decoys
         GameObject startingDecoy = spawnedDecoys[Random.Range(0, spawnedDecoys.Count)];
         GameObject enemyObject = Instantiate(
             scarecrowEnemyPrefab,
@@ -108,16 +114,14 @@ public class ScarecrowSpawnManager : MonoBehaviour
         if (spawnedEnemy == null)
             spawnedEnemy = enemyObject.GetComponentInChildren<ScarecrowEnemy>();
 
-        if (spawnedEnemy == null)
+        if (spawnedEnemy != null)
         {
-            Debug.LogWarning("The enemy prefab does not contain a ScarecrowEnemy script.", this);
-            return;
+            spawnedEnemy.player = player;
+            spawnedEnemy.playerCamera = playerCamera;
+            spawnedEnemy.enableScarecrowSwitching = true; // Enabled by default
+            spawnedEnemy.ConfigureSwitchingTargets(spawnedDecoys, player, playerCamera);
+            spawnedEnemy.MoveIntoDecoy(startingDecoy);
         }
-
-        spawnedEnemy.player = player;
-        spawnedEnemy.playerCamera = playerCamera;
-        spawnedEnemy.ConfigureSwitchingTargets(spawnedDecoys, player, playerCamera);
-        spawnedEnemy.MoveIntoDecoy(startingDecoy);
     }
 
     void SpawnAllEnemies(List<Vector3> spawnPositions)
@@ -139,13 +143,23 @@ public class ScarecrowSpawnManager : MonoBehaviour
     {
         hasTriggeredEvilMode = true;
 
-        if (spawnedEnemy != null)
-            spawnedEnemy.enableScarecrowSwitching = false;
-
-        foreach (GameObject decoy in spawnedDecoys)
+        // Shuffle the decoys list (Fisher-Yates) to pick random targets for conversion
+        for (int i = 0; i < spawnedDecoys.Count; i++)
         {
-            if (decoy == null)
-                continue;
+            GameObject temp = spawnedDecoys[i];
+            int randomIndex = Random.Range(i, spawnedDecoys.Count);
+            spawnedDecoys[i] = spawnedDecoys[randomIndex];
+            spawnedDecoys[randomIndex] = temp;
+        }
+
+        // Limit conversion count to what's available
+        int targetsToConvert = Mathf.Min(conversionCount, spawnedDecoys.Count);
+        List<GameObject> decoysToDestroy = new List<GameObject>();
+
+        for (int i = 0; i < targetsToConvert; i++)
+        {
+            GameObject decoy = spawnedDecoys[i];
+            if (decoy == null) continue;
 
             GameObject enemyObject = Instantiate(
                 scarecrowEnemyPrefab,
@@ -154,30 +168,41 @@ public class ScarecrowSpawnManager : MonoBehaviour
                 spawnedParent);
 
             PrepareEnemy(enemyObject);
+            decoysToDestroy.Add(decoy);
+        }
+
+        // Remove converted decoys from the master list and destroy them
+        foreach (GameObject decoy in decoysToDestroy)
+        {
+            spawnedDecoys.Remove(decoy);
             Destroy(decoy);
         }
 
-        spawnedDecoys.Clear();
+        // Refresh switching targets for the original spawned enemy if it exists
+        if (spawnedEnemy != null)
+        {
+            spawnedEnemy.enableScarecrowSwitching = true;
+            spawnedEnemy.ConfigureSwitchingTargets(spawnedDecoys, player, playerCamera);
+        }
     }
 
     void PrepareEnemy(GameObject enemyObject)
     {
-        if (enemyObject == null)
-            return;
+        if (enemyObject == null) return;
 
         ScarecrowEnemy scarecrowEnemy = enemyObject.GetComponent<ScarecrowEnemy>();
         if (scarecrowEnemy == null)
             scarecrowEnemy = enemyObject.GetComponentInChildren<ScarecrowEnemy>();
 
-        if (scarecrowEnemy == null)
+        if (scarecrowEnemy != null)
         {
-            Debug.LogWarning("The enemy prefab does not contain a ScarecrowEnemy script.", this);
-            return;
+            scarecrowEnemy.player = player;
+            scarecrowEnemy.playerCamera = playerCamera;
+            scarecrowEnemy.enableScarecrowSwitching = true; // Switching re-enabled
+            
+            // Allow this specific real scarecrow to use the remaining decoys
+            scarecrowEnemy.ConfigureSwitchingTargets(spawnedDecoys, player, playerCamera);
         }
-
-        scarecrowEnemy.player = player;
-        scarecrowEnemy.playerCamera = playerCamera;
-        scarecrowEnemy.enableScarecrowSwitching = false;
     }
 
     bool ShouldUseEvilScarecrows()
@@ -236,8 +261,7 @@ public class ScarecrowSpawnManager : MonoBehaviour
 
     bool IsClearOfCorn(Vector3 position)
     {
-        if (!avoidCorn)
-            return true;
+        if (!avoidCorn) return true;
 
         return !IsNearCornCollider(position) &&
                !IsInsideCornRendererBounds(position) &&
@@ -266,8 +290,7 @@ public class ScarecrowSpawnManager : MonoBehaviour
     {
         foreach (Renderer cornRenderer in cornRenderers)
         {
-            if (cornRenderer == null)
-                continue;
+            if (cornRenderer == null) continue;
 
             Bounds bounds = cornRenderer.bounds;
             bounds.Expand(new Vector3(cornClearanceRadius * 2f, 0f, cornClearanceRadius * 2f));
@@ -285,8 +308,7 @@ public class ScarecrowSpawnManager : MonoBehaviour
         foreach (TerrainCornDetailLayer cornDetailLayer in cornDetailLayers)
         {
             Terrain terrain = cornDetailLayer.terrain;
-            if (terrain == null || terrain.terrainData == null)
-                continue;
+            if (terrain == null || terrain.terrainData == null) continue;
 
             TerrainData terrainData = terrain.terrainData;
             Vector3 localPosition = position - terrain.transform.position;
@@ -309,11 +331,9 @@ public class ScarecrowSpawnManager : MonoBehaviour
             int[,] details = terrainData.GetDetailLayer(xBase, zBase, width, height, cornDetailLayer.layerIndex);
             foreach (int detailDensity in details)
             {
-                if (detailDensity > 0)
-                    return true;
+                if (detailDensity > 0) return true;
             }
         }
-
         return false;
     }
 
@@ -327,15 +347,12 @@ public class ScarecrowSpawnManager : MonoBehaviour
             if ((position2D - cornPosition2D).sqrMagnitude <= clearanceSqr)
                 return true;
         }
-
         return false;
     }
 
     bool IsFarEnoughFromPlayer(Vector3 position)
     {
-        if (player == null)
-            return true;
-
+        if (player == null) return true;
         return Vector3.Distance(player.position, position) >= minDistanceFromPlayer;
     }
 
@@ -346,15 +363,12 @@ public class ScarecrowSpawnManager : MonoBehaviour
             if (Vector3.Distance(existingPosition, position) < minDistanceBetweenScarecrows)
                 return false;
         }
-
         return true;
     }
 
     Quaternion GetSpawnRotation()
     {
-        if (!randomizeYRotation)
-            return Quaternion.identity;
-
+        if (!randomizeYRotation) return Quaternion.identity;
         return Quaternion.Euler(0f, Random.Range(0f, 360f), 0f);
     }
 
@@ -366,7 +380,6 @@ public class ScarecrowSpawnManager : MonoBehaviour
             if (playerObject != null)
                 player = playerObject.transform;
         }
-
         if (playerCamera == null)
             playerCamera = Camera.main;
     }
@@ -377,8 +390,7 @@ public class ScarecrowSpawnManager : MonoBehaviour
         cornDetailLayers.Clear();
         cornTerrainTreePositions.Clear();
 
-        if (!avoidCorn)
-            return;
+        if (!avoidCorn) return;
 
         foreach (Renderer sceneRenderer in FindObjectsByType<Renderer>(FindObjectsSortMode.None))
         {
@@ -388,8 +400,7 @@ public class ScarecrowSpawnManager : MonoBehaviour
 
         foreach (Terrain terrain in Terrain.activeTerrains)
         {
-            if (terrain == null || terrain.terrainData == null)
-                continue;
+            if (terrain == null || terrain.terrainData == null) continue;
 
             DetailPrototype[] detailPrototypes = terrain.terrainData.detailPrototypes;
             for (int i = 0; i < detailPrototypes.Length; i++)
@@ -398,14 +409,9 @@ public class ScarecrowSpawnManager : MonoBehaviour
                 if (IsCornName(detailPrototype.prototype != null ? detailPrototype.prototype.name : null) ||
                     IsCornName(detailPrototype.prototypeTexture != null ? detailPrototype.prototypeTexture.name : null))
                 {
-                    cornDetailLayers.Add(new TerrainCornDetailLayer
-                    {
-                        terrain = terrain,
-                        layerIndex = i
-                    });
+                    cornDetailLayers.Add(new TerrainCornDetailLayer { terrain = terrain, layerIndex = i });
                 }
             }
-
             CacheCornTerrainTrees(terrain);
         }
     }
@@ -414,8 +420,7 @@ public class ScarecrowSpawnManager : MonoBehaviour
     {
         TerrainData terrainData = terrain.terrainData;
         TreePrototype[] treePrototypes = terrainData.treePrototypes;
-        if (treePrototypes == null || treePrototypes.Length == 0)
-            return;
+        if (treePrototypes == null || treePrototypes.Length == 0) return;
 
         HashSet<int> cornPrototypeIndexes = new HashSet<int>();
         for (int i = 0; i < treePrototypes.Length; i++)
@@ -425,13 +430,11 @@ public class ScarecrowSpawnManager : MonoBehaviour
                 cornPrototypeIndexes.Add(i);
         }
 
-        if (cornPrototypeIndexes.Count == 0)
-            return;
+        if (cornPrototypeIndexes.Count == 0) return;
 
         foreach (TreeInstance treeInstance in terrainData.treeInstances)
         {
-            if (!cornPrototypeIndexes.Contains(treeInstance.prototypeIndex))
-                continue;
+            if (!cornPrototypeIndexes.Contains(treeInstance.prototypeIndex)) continue;
 
             Vector3 terrainSpacePosition = Vector3.Scale(treeInstance.position, terrainData.size);
             cornTerrainTreePositions.Add(terrain.transform.position + terrainSpacePosition);
@@ -443,19 +446,15 @@ public class ScarecrowSpawnManager : MonoBehaviour
         Transform current = objectTransform;
         while (current != null)
         {
-            if (IsCornName(current.name))
-                return true;
-
+            if (IsCornName(current.name)) return true;
             current = current.parent;
         }
-
         return false;
     }
 
     bool IsCornName(string objectName)
     {
-        if (string.IsNullOrEmpty(objectName) || cornNameKeywords == null)
-            return false;
+        if (string.IsNullOrEmpty(objectName) || cornNameKeywords == null) return false;
 
         foreach (string keyword in cornNameKeywords)
         {
@@ -465,7 +464,6 @@ public class ScarecrowSpawnManager : MonoBehaviour
                 return true;
             }
         }
-
         return false;
     }
 }
