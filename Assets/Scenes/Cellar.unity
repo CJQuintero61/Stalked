@@ -4170,7 +4170,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 65791c5661cfd6b4ca71600d4307f2e3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MazeGameManager
-  nextSceneName: 
+  nextSceneBuildIndex: 1
   spawnPositionInNextScene: {x: -493.82, y: 2.58, z: -6.49}
   exitPromptUI: {fileID: 0}
 --- !u!4 &1021605738

@@ -59,9 +59,12 @@ public class ScarecrowSpawnManager : MonoBehaviour
 
     void Update()
     {
-        // Check for the "Evil Mode" trigger condition defined in ShouldUseEvilScarecrows
+        // Check for the "Evil Mode" trigger condition. 
+        // If we return from the cellar, this will trigger on the first frame.
         if (!hasTriggeredEvilMode && ShouldUseEvilScarecrows())
+        {
             ConvertDecoysToEnemies();
+        }
     }
 
     public void SpawnScarecrows()
@@ -80,15 +83,8 @@ public class ScarecrowSpawnManager : MonoBehaviour
 
         List<Vector3> spawnPositions = GenerateSpawnPositions();
 
-        // If starting the scene already in "Evil Mode"
-        if (ShouldUseEvilScarecrows())
-        {
-            SpawnAllEnemies(spawnPositions);
-            hasTriggeredEvilMode = true;
-            return;
-        }
-
-        // Standard Spawn: Create Decoys
+        // Always spawn decoys first. 
+        // We removed the SpawnAllEnemies check here so we don't accidentally spawn 14 real enemies.
         foreach (Vector3 position in spawnPositions)
         {
             Quaternion rotation = GetSpawnRotation();
@@ -118,24 +114,9 @@ public class ScarecrowSpawnManager : MonoBehaviour
         {
             spawnedEnemy.player = player;
             spawnedEnemy.playerCamera = playerCamera;
-            spawnedEnemy.enableScarecrowSwitching = true; // Enabled by default
+            spawnedEnemy.enableScarecrowSwitching = true;
             spawnedEnemy.ConfigureSwitchingTargets(spawnedDecoys, player, playerCamera);
             spawnedEnemy.MoveIntoDecoy(startingDecoy);
-        }
-    }
-
-    void SpawnAllEnemies(List<Vector3> spawnPositions)
-    {
-        foreach (Vector3 position in spawnPositions)
-        {
-            Quaternion rotation = GetSpawnRotation();
-            GameObject enemyObject = Instantiate(
-                scarecrowEnemyPrefab,
-                position,
-                rotation,
-                spawnedParent);
-
-            PrepareEnemy(enemyObject);
         }
     }
 
@@ -152,7 +133,7 @@ public class ScarecrowSpawnManager : MonoBehaviour
             spawnedDecoys[randomIndex] = temp;
         }
 
-        // Limit conversion count to what's available
+        // Limit conversion count to what's defined in the inspector
         int targetsToConvert = Mathf.Min(conversionCount, spawnedDecoys.Count);
         List<GameObject> decoysToDestroy = new List<GameObject>();
 
@@ -171,17 +152,16 @@ public class ScarecrowSpawnManager : MonoBehaviour
             decoysToDestroy.Add(decoy);
         }
 
-        // Remove converted decoys from the master list and destroy them
+        // Clean up the master list
         foreach (GameObject decoy in decoysToDestroy)
         {
             spawnedDecoys.Remove(decoy);
             Destroy(decoy);
         }
 
-        // Refresh switching targets for the original spawned enemy if it exists
+        // Refresh switching targets for the original spawned enemy so it doesn't try to teleport to a destroyed decoy
         if (spawnedEnemy != null)
         {
-            spawnedEnemy.enableScarecrowSwitching = true;
             spawnedEnemy.ConfigureSwitchingTargets(spawnedDecoys, player, playerCamera);
         }
     }
@@ -198,9 +178,7 @@ public class ScarecrowSpawnManager : MonoBehaviour
         {
             scarecrowEnemy.player = player;
             scarecrowEnemy.playerCamera = playerCamera;
-            scarecrowEnemy.enableScarecrowSwitching = true; // Switching re-enabled
-            
-            // Allow this specific real scarecrow to use the remaining decoys
+            scarecrowEnemy.enableScarecrowSwitching = true; 
             scarecrowEnemy.ConfigureSwitchingTargets(spawnedDecoys, player, playerCamera);
         }
     }
