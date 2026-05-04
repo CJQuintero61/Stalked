@@ -10,6 +10,12 @@ public class MainMenu : MonoBehaviour
     public float fadeDuration = 2.0f;
     public float displayDuration = 4.0f; // How long the text stays visible before loading
 
+    public void Start()
+    {
+        Cursor.visible = true; // Ensure the cursor is visible in the main menu
+        Cursor.lockState = CursorLockMode.None; // Unlock the cursor
+    }
+
     public void Play()
     {
         // Instead of loading instantly, we start the transition sequence
