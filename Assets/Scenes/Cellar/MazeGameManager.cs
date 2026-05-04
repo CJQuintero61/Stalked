@@ -5,7 +5,7 @@ using UnityEngine.InputSystem; // Required for the New Input System
 public class MazeGameManager : MonoBehaviour
 {
     [Header("Transition Settings")]
-    public string nextSceneName = "MainWorld";
+    public int nextSceneBuildIndex = 1; // load the Game scene
     public Vector3 spawnPositionInNextScene = new Vector3(10, 0, 10);
     
     [Header("UI")]
@@ -74,6 +74,6 @@ public class MazeGameManager : MonoBehaviour
         GlobalSpawnPoint = spawnPositionInNextScene;
         ShouldTeleport = true;
 
-        SceneManager.LoadScene(nextSceneName);
+        SceneManager.LoadScene(nextSceneBuildIndex);
     }
 }
