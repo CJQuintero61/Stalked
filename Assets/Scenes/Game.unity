@@ -2188,6 +2188,8 @@ MonoBehaviour:
   textDisplay: {fileID: 1233039814}
   goodEndingGraphic: {fileID: 21300000, guid: aec1d2e537cf93346b2c97546884414a, type: 3}
   badEndingGraphic: {fileID: 21300000, guid: 64af75111fe08a54cbfc361d99a2c975, type: 3}
+  goodEndingSceneName: GoodEnding
+  mainMenuSceneIndex: 0
   fadeDuration: 2
   waitTimeBeforeRestart: 6
 --- !u!65 &212045073
