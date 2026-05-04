@@ -7507,9 +7507,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StaminaManager
   maxStamina: 50
-  staminaDrainRate: 10
-  staminaRegenRate: 10
-  regenDelay: 1
+  staminaDrainRate: 20
+  staminaRegenRate: 5
+  regenDelay: 1.5
   audioSource: {fileID: 0}
   outOfBreathSound: {fileID: 8300000, guid: 8b5c95aac8c2839448bd44c167b7f04f, type: 3}
 --- !u!114 &728229206
